@@ -1,0 +1,24 @@
+{
+  "name": "04-phev-2020-registered-2027",
+  "description": "Ίδιο PHEV, ταξινόμηση 01/2027: απαλλαγή 50% (ν. 5313/2026)",
+  "status": "placeholder",
+  "source": "Υπολογισμός με τους κανόνες της έκδοσης (ανεξάρτητη υλοποίηση σε Python). ΔΕΝ είναι επιβεβαιωμένο από εκκαθαριστικό τελωνείου.",
+  "input": {
+    "ltpfEur": 45000,
+    "firstRegistration": "2020-10-31",
+    "expectedRegistration": "2027-01-15",
+    "mileageKm": 96090,
+    "bodyCategory": "sedan",
+    "co2GKm": 39,
+    "euroClass": "6d",
+    "powertrain": "PHEV",
+    "extrasEur": 0,
+    "mhevCountsAsHybrid": false
+  },
+  "expected": {
+    "registrationTaxEur": 1542.0,
+    "environmentalFeeEur": 0,
+    "taxableValueEur": 10375.28,
+    "toleranceEur": 0.05
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@timoula/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure TypeScript domain logic: Greek registration tax, ΛΤΠΦ lookup, cost breakdown, market comparison. No browser APIs.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rules/gr-tax-rules.json": "./rules/gr-tax-rules.json",
+    "./ltpf/ltpf-records.json": "./ltpf/ltpf-records.json"
+  },
+  "dependencies": {
+    "valibot": "^1.5.0"
+  }
+}

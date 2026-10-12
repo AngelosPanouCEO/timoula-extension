@@ -1,0 +1,10 @@
+{
+  "_comment": "Models sold (almost) only as mild hybrids although listings show plain petrol/diesel. A hint never sets the powertrain; it only asks the client to check the COC. Patterns are case-insensitive regular expressions over model + version + title.",
+  "hints": [
+    { "make": "Mercedes-Benz", "modelPattern": "\\bC ?(180|200|220 ?d|300|300 ?d)\\b", "fromYear": 2021, "note": "Mercedes C-Class W206 (2021+): ISG 48V mild hybrid" },
+    { "make": "Mercedes-Benz", "modelPattern": "\\bE ?(200|220 ?d|300|450)\\b", "fromYear": 2023, "note": "Mercedes E-Class W214 (2023+): ISG 48V mild hybrid" },
+    { "make": "Audi", "modelPattern": "\\b(A[4-8]|Q[5-8])\\b.*\\b(TFSI|TDI)\\b", "fromYear": 2019, "note": "Audi A4–A8 / Q5–Q8 (2019+): many versions MHEV 12V/48V" },
+    { "make": "Volvo", "modelPattern": "\\b(B[3-6])\\b", "fromYear": 2020, "note": "Volvo B3–B6: 48V mild hybrid" },
+    { "make": "Subaru", "modelPattern": "e-?boxer", "fromYear": 2019, "note": "Subaru e-BOXER: mild hybrid" }
+  ]
+}

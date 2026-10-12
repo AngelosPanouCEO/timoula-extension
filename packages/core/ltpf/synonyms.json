@@ -1,0 +1,19 @@
+{
+  "_comment": "Name normalisation for ΛΤΠΦ lookup. Keys and values are upper case. 'brands' maps listing brand names to price-list brand names; 'models' maps, per brand, listing model names to price-list model names.",
+  "brands": {
+    "VW": "VOLKSWAGEN",
+    "MERCEDES": "MERCEDES-BENZ",
+    "MERCEDES BENZ": "MERCEDES-BENZ",
+    "MB": "MERCEDES-BENZ",
+    "ŠKODA": "SKODA",
+    "CITROËN": "CITROEN",
+    "ALFA": "ALFA ROMEO"
+  },
+  "models": {
+    "SUBARU": {
+      "FORE": "FORESTER",
+      "XV CROSSTREK": "XV",
+      "OUTBACK WAGON": "OUTBACK"
+    }
+  }
+}

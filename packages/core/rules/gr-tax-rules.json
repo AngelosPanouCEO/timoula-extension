@@ -1,0 +1,1306 @@
+{
+  "schemaVersion": 1,
+  "rulesId": "gr-registration-tax",
+  "jurisdiction": "GR",
+  "revision": "2026-10-12.1",
+  "publishedAt": "2026-10-12",
+  "preparedBy": "Draft from official texts (taxheaven.gr mirrors of ΦΕΚ). Items marked VERIFY need a human check against AADE.",
+  "versions": [
+    {
+      "id": "2025-11-01",
+      "effectiveFrom": "2025-11-01",
+      "effectiveTo": "2026-12-31",
+      "selectedBy": "expectedRegistrationDate",
+      "summary": "Καθεστώς έως 31/12/2026: υβριδικά ≥51 g/km 50%, ≤50 g/km 75%, ηλεκτρικά 0%.",
+      "verify": [
+        "Ο συνδυασμός προσαύξησης CO2 και Euro (παρ. 3 και 5 άρθρου 136) εφαρμόζεται πολλαπλασιαστικά (συντελεστής × (1+CO2) × (1+Euro)). Ο νόμος δεν το ορίζει ρητά· να επιβεβαιωθεί με πραγματικό εκκαθαριστικό.",
+        "Η κλίμακα εφαρμόζεται στη φορολογητέα αξία ΠΡΙΝ τις μειώσεις (παρ. 2α άρθρου 136) και ο μέσος συντελεστής που προκύπτει εφαρμόζεται στην απομειωμένη αξία. Ερμηνεία προς επιβεβαίωση.",
+        "Ο πίνακας απομείωσης είναι της Α.Υ.Ο. ΔΕΦΚΦΔ 1192035/2017 (ισχύς από 7/1/2018). Δεν βρέθηκε νεότερη απόφαση· να επιβεβαιωθεί ότι ισχύει ακόμα.",
+        "Ηλικία κάτω των 6 μηνών: γραμμική αναγωγή από 0% έως το ποσοστό των 6 μηνών (άρθρο 11 §3 Α.1203/2019, «αναλογικά»).",
+        "Μείωση λόγω χιλιομέτρων: 0,10% ανά 500 km πάνω από 15.000 km/έτος, με όριο 10%. Ο «συντελεστής 0,10» ερμηνεύεται ως 0,10 ποσοστιαίες μονάδες.",
+        "Ήπια υβριδικά (MHEV, 48V): η απαλλαγή εφαρμόζεται μόνο αν το πιστοποιητικό συμμόρφωσης (COC) τα χαρακτηρίζει υβριδικά ηλεκτρικά. Ο πελάτης το επιβεβαιώνει ανά αυτοκίνητο.",
+        "Περιβαλλοντικό τέλος Euro 4 / Euro 5: ποσά από δευτερογενή πηγή (ν. 4710/2020 και τροπολογία 2022). Να επιβεβαιωθεί ότι ισχύει και με ποια ποσά.",
+        "Απαγόρευση ταξινόμησης Euro 1–3 (εκτός οχημάτων ιστορικού ενδιαφέροντος άνω των 30 ετών): να επιβεβαιωθεί.",
+        "Αυτοκίνητα ιστορικού ενδιαφέροντος (>30 ετών): υπολογίζονται με τους γενικούς κανόνες και εμφανίζεται προειδοποίηση· το ειδικό καθεστώς ΟΙΘ δεν έχει μοντελοποιηθεί.",
+        "Καινούργιο μεταφορικό μέσο: η βάση ΦΠΑ 24% περιλαμβάνει το τέλος ταξινόμησης (όπως στις λιανικές τιμές καινούργιων). Να επιβεβαιωθεί.",
+        "Ημερομηνία έναρξης της έκδοσης (1/11/2025) επιλέχθηκε από την παρ. 6α· οι κανόνες ισχύουν πιθανότατα από την έναρξη του ν. 5222/2025."
+      ],
+      "sources": [
+        {
+          "id": "N5222_136",
+          "title": "Ν. 5222/2025 (Εθνικός Τελωνειακός Κώδικας), άρθρο 136 – Τέλος ταξινόμησης επιβατικών αυτοκινήτων ιδιωτικής χρήσης (όπως τροποποιήθηκε με ν. 5313/2026)",
+          "url": "https://www.taxheaven.gr/law/5222/2025/arthro/136"
+        },
+        {
+          "id": "N5222_142",
+          "title": "Ν. 5222/2025, άρθρο 142 – Φορολογητέα αξία επιβατικών αυτοκινήτων",
+          "url": "https://www.taxheaven.gr/law/5222/2025/arthro/142"
+        },
+        {
+          "id": "N5222_146",
+          "title": "Ν. 5222/2025, άρθρο 146 §4 – εφαρμόζονται οι συντελεστές που ισχύουν όταν το τέλος καθίσταται απαιτητό",
+          "url": "https://www.taxheaven.gr/law/5313/2026/arthro/11"
+        },
+        {
+          "id": "N5313_10",
+          "title": "Ν. 5313/2026 (Α' 102), άρθρο 10 – Μείωση απαλλαγής υβριδικών ανεξαρτήτως CO2",
+          "url": "https://www.taxheaven.gr/law/5313/2026/arthro/10"
+        },
+        {
+          "id": "E2039_2026",
+          "title": "Εγκύκλιος ΑΑΔΕ Ε.2039/17-07-2026 – εφαρμογή άρθρου 10 ν. 5313/2026 (παλαιό καθεστώς έως 31-12-2026)",
+          "url": "https://www.aade.gr/sites/default/files/2026-07/e2039_2026.pdf"
+        },
+        {
+          "id": "FEK4618_2017",
+          "title": "Α.Υ.Ο. ΔΕΦΚΦΔ 1192035 ΕΞ 2017 (ΦΕΚ Β' 4618/28-12-2017) – Ποσοστά απομείωσης ανά ηλικία και κατηγορία αμαξώματος",
+          "url": "https://www.taxheaven.gr/circulars/27780/ariom-defkfd-1192035-ex-2017"
+        },
+        {
+          "id": "A1203_2019",
+          "title": "Απόφαση ΑΑΔΕ Α.1203/2019 – τιμοκατάλογοι, άρθρο 9 (ειδικές περιπτώσεις), άρθρο 11 (απομείωση, ενδιάμεσοι μήνες)",
+          "url": "https://www.taxheaven.gr/circulars/30942/a-1203-2019"
+        },
+        {
+          "id": "N4710_2020",
+          "title": "Ν. 4710/2020 – Περιβαλλοντικό τέλος εισαγόμενων μεταχειρισμένων (Euro 4: 3.000 €, Euro 5a: 1.000 €) και τροπολογία 02/2022 (Euro 5b: 1.000 €). Δευτερογενής πηγή – δεν εντοπίστηκε το ισχύον κείμενο.",
+          "url": "https://www.gocar.gr/news/feed/38742,Neo_xaratsi_1000_eyrw_sta_eisagomena_met.html"
+        },
+        {
+          "id": "VAT_NMT",
+          "title": "Κώδικας ΦΠΑ – καινούργια μεταφορικά μέσα (≤6 μήνες ή ≤6.000 km) φορολογούνται με ΦΠΑ στην Ελλάδα",
+          "url": null
+        }
+      ],
+      "taxableValue": {
+        "sourceId": "N5222_142",
+        "depreciation": {
+          "sourceId": "FEK4618_2017",
+          "status": "VERIFY",
+          "interpolation": "linear-monthly",
+          "belowFirstRow": "linear-from-zero",
+          "table": [
+            {
+              "ageYears": 0.5,
+              "suv_atv": 11,
+              "hatchback": 9,
+              "sedan": 15,
+              "cabrio": 11,
+              "coupe_roadster": 12,
+              "mpv": 9
+            },
+            {
+              "ageYears": 1.0,
+              "suv_atv": 22,
+              "hatchback": 19,
+              "sedan": 30,
+              "cabrio": 22,
+              "coupe_roadster": 25,
+              "mpv": 19
+            },
+            {
+              "ageYears": 1.5,
+              "suv_atv": 25,
+              "hatchback": 24,
+              "sedan": 33,
+              "cabrio": 26,
+              "coupe_roadster": 25,
+              "mpv": 23
+            },
+            {
+              "ageYears": 2.0,
+              "suv_atv": 29,
+              "hatchback": 28,
+              "sedan": 36,
+              "cabrio": 30,
+              "coupe_roadster": 29,
+              "mpv": 27
+            },
+            {
+              "ageYears": 2.5,
+              "suv_atv": 35,
+              "hatchback": 32,
+              "sedan": 40,
+              "cabrio": 33,
+              "coupe_roadster": 32,
+              "mpv": 33
+            },
+            {
+              "ageYears": 3.0,
+              "suv_atv": 37,
+              "hatchback": 37,
+              "sedan": 43,
+              "cabrio": 36,
+              "coupe_roadster": 36,
+              "mpv": 36
+            },
+            {
+              "ageYears": 3.5,
+              "suv_atv": 44,
+              "hatchback": 43,
+              "sedan": 50,
+              "cabrio": 42,
+              "coupe_roadster": 41,
+              "mpv": 43
+            },
+            {
+              "ageYears": 4.0,
+              "suv_atv": 50,
+              "hatchback": 49,
+              "sedan": 57,
+              "cabrio": 48,
+              "coupe_roadster": 47,
+              "mpv": 49
+            },
+            {
+              "ageYears": 4.5,
+              "suv_atv": 56,
+              "hatchback": 55,
+              "sedan": 64,
+              "cabrio": 54,
+              "coupe_roadster": 53,
+              "mpv": 55
+            },
+            {
+              "ageYears": 5.0,
+              "suv_atv": 62,
+              "hatchback": 61,
+              "sedan": 72,
+              "cabrio": 60,
+              "coupe_roadster": 59,
+              "mpv": 61
+            },
+            {
+              "ageYears": 5.5,
+              "suv_atv": 66,
+              "hatchback": 64,
+              "sedan": 74,
+              "cabrio": 64,
+              "coupe_roadster": 63,
+              "mpv": 64
+            },
+            {
+              "ageYears": 6.0,
+              "suv_atv": 68,
+              "hatchback": 67,
+              "sedan": 76,
+              "cabrio": 67,
+              "coupe_roadster": 66,
+              "mpv": 67
+            },
+            {
+              "ageYears": 6.5,
+              "suv_atv": 71,
+              "hatchback": 70,
+              "sedan": 78,
+              "cabrio": 69,
+              "coupe_roadster": 68,
+              "mpv": 70
+            },
+            {
+              "ageYears": 7.0,
+              "suv_atv": 73,
+              "hatchback": 72,
+              "sedan": 80,
+              "cabrio": 72,
+              "coupe_roadster": 71,
+              "mpv": 72
+            },
+            {
+              "ageYears": 7.5,
+              "suv_atv": 75,
+              "hatchback": 74,
+              "sedan": 81,
+              "cabrio": 74,
+              "coupe_roadster": 73,
+              "mpv": 75
+            },
+            {
+              "ageYears": 8.0,
+              "suv_atv": 77,
+              "hatchback": 76,
+              "sedan": 83,
+              "cabrio": 76,
+              "coupe_roadster": 75,
+              "mpv": 77
+            },
+            {
+              "ageYears": 8.5,
+              "suv_atv": 79,
+              "hatchback": 78,
+              "sedan": 84,
+              "cabrio": 78,
+              "coupe_roadster": 77,
+              "mpv": 78
+            },
+            {
+              "ageYears": 9.0,
+              "suv_atv": 80,
+              "hatchback": 80,
+              "sedan": 85,
+              "cabrio": 79,
+              "coupe_roadster": 79,
+              "mpv": 80
+            },
+            {
+              "ageYears": 9.5,
+              "suv_atv": 82,
+              "hatchback": 81,
+              "sedan": 86,
+              "cabrio": 81,
+              "coupe_roadster": 80,
+              "mpv": 82
+            },
+            {
+              "ageYears": 10.0,
+              "suv_atv": 83,
+              "hatchback": 83,
+              "sedan": 87,
+              "cabrio": 82,
+              "coupe_roadster": 82,
+              "mpv": 83
+            },
+            {
+              "ageYears": 10.5,
+              "suv_atv": 84,
+              "hatchback": 83,
+              "sedan": 88,
+              "cabrio": 83,
+              "coupe_roadster": 83,
+              "mpv": 84
+            },
+            {
+              "ageYears": 11.0,
+              "suv_atv": 85,
+              "hatchback": 84,
+              "sedan": 89,
+              "cabrio": 84,
+              "coupe_roadster": 84,
+              "mpv": 85
+            },
+            {
+              "ageYears": 11.5,
+              "suv_atv": 86,
+              "hatchback": 85,
+              "sedan": 89,
+              "cabrio": 85,
+              "coupe_roadster": 85,
+              "mpv": 86
+            },
+            {
+              "ageYears": 12.0,
+              "suv_atv": 87,
+              "hatchback": 86,
+              "sedan": 90,
+              "cabrio": 86,
+              "coupe_roadster": 86,
+              "mpv": 87
+            },
+            {
+              "ageYears": 12.5,
+              "suv_atv": 88,
+              "hatchback": 87,
+              "sedan": 90,
+              "cabrio": 87,
+              "coupe_roadster": 87,
+              "mpv": 88
+            },
+            {
+              "ageYears": 13.0,
+              "suv_atv": 88,
+              "hatchback": 88,
+              "sedan": 90,
+              "cabrio": 88,
+              "coupe_roadster": 87,
+              "mpv": 89
+            },
+            {
+              "ageYears": 13.5,
+              "suv_atv": 89,
+              "hatchback": 89,
+              "sedan": 91,
+              "cabrio": 88,
+              "coupe_roadster": 88,
+              "mpv": 89
+            },
+            {
+              "ageYears": 14.0,
+              "suv_atv": 90,
+              "hatchback": 89,
+              "sedan": 91,
+              "cabrio": 89,
+              "coupe_roadster": 89,
+              "mpv": 90
+            },
+            {
+              "ageYears": 14.5,
+              "suv_atv": 90,
+              "hatchback": 90,
+              "sedan": 91,
+              "cabrio": 89,
+              "coupe_roadster": 89,
+              "mpv": 91
+            },
+            {
+              "ageYears": 15.0,
+              "suv_atv": 90,
+              "hatchback": 90,
+              "sedan": 91,
+              "cabrio": 90,
+              "coupe_roadster": 89,
+              "mpv": 91
+            },
+            {
+              "ageYears": 15.5,
+              "suv_atv": 90,
+              "hatchback": 90,
+              "sedan": 91,
+              "cabrio": 90,
+              "coupe_roadster": 89,
+              "mpv": 91
+            },
+            {
+              "ageYears": 16.0,
+              "suv_atv": 95,
+              "hatchback": 95,
+              "sedan": 95,
+              "cabrio": 95,
+              "coupe_roadster": 95,
+              "mpv": 95
+            }
+          ]
+        },
+        "mileage": {
+          "sourceId": "N5222_142",
+          "status": "VERIFY",
+          "averageKmPerYear": 15000,
+          "stepKm": 500,
+          "pctPerStep": 0.1,
+          "maxPct": 10
+        },
+        "maxTotalDepreciationPct": 95
+      },
+      "brackets": {
+        "sourceId": "N5222_136",
+        "status": "OK",
+        "mode": "progressive-pre-depreciation-scaled",
+        "bands": [
+          {
+            "upToEur": 14000,
+            "ratePct": 4
+          },
+          {
+            "upToEur": 17000,
+            "ratePct": 26
+          },
+          {
+            "upToEur": 20000,
+            "ratePct": 53
+          },
+          {
+            "upToEur": 25000,
+            "ratePct": 62
+          },
+          {
+            "upToEur": 30000,
+            "ratePct": 71
+          },
+          {
+            "upToEur": null,
+            "ratePct": 30
+          }
+        ]
+      },
+      "co2": {
+        "sourceId": "N5222_136",
+        "status": "OK",
+        "tables": [
+          {
+            "cycle": "NEDC",
+            "firstRegistrationTo": "2020-12-31",
+            "bands": [
+              {
+                "upToGKm": 100,
+                "adjustPct": -5
+              },
+              {
+                "upToGKm": 120,
+                "adjustPct": 0
+              },
+              {
+                "upToGKm": 140,
+                "adjustPct": 10
+              },
+              {
+                "upToGKm": 160,
+                "adjustPct": 20
+              },
+              {
+                "upToGKm": 180,
+                "adjustPct": 30
+              },
+              {
+                "upToGKm": 200,
+                "adjustPct": 40
+              },
+              {
+                "upToGKm": 250,
+                "adjustPct": 60
+              },
+              {
+                "upToGKm": null,
+                "adjustPct": 100
+              }
+            ]
+          },
+          {
+            "cycle": "WLTP",
+            "firstRegistrationFrom": "2021-01-01",
+            "bands": [
+              {
+                "upToGKm": 130,
+                "adjustPct": -5
+              },
+              {
+                "upToGKm": 156,
+                "adjustPct": 0
+              },
+              {
+                "upToGKm": 182,
+                "adjustPct": 10
+              },
+              {
+                "upToGKm": 208,
+                "adjustPct": 20
+              },
+              {
+                "upToGKm": 234,
+                "adjustPct": 30
+              },
+              {
+                "upToGKm": 260,
+                "adjustPct": 40
+              },
+              {
+                "upToGKm": 325,
+                "adjustPct": 60
+              },
+              {
+                "upToGKm": null,
+                "adjustPct": 100
+              }
+            ]
+          }
+        ],
+        "notProvenAdjustPct": 100,
+        "combineWithEuro": "multiplicative",
+        "combineStatus": "VERIFY"
+      },
+      "euro": {
+        "sourceId": "N5222_136",
+        "status": "OK",
+        "plainEuro5": [
+          {
+            "firstRegistrationTo": "2012-12-31",
+            "treatAs": "5a"
+          },
+          {
+            "firstRegistrationTo": null,
+            "treatAs": "5b"
+          }
+        ],
+        "plainEuro5Status": "VERIFY",
+        "rules": [
+          {
+            "id": "136-5d",
+            "euroClasses": [
+              "none"
+            ],
+            "adjustPct": 200,
+            "note": "Συμβατικής τεχνολογίας (χωρίς Euro)"
+          },
+          {
+            "id": "136-5c",
+            "euroClasses": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5a",
+              "6a"
+            ],
+            "adjustPct": 200,
+            "note": "Euro 1–4, 5a, 6a"
+          },
+          {
+            "id": "136-5b-5b",
+            "euroClasses": [
+              "5b"
+            ],
+            "adjustPct": 100,
+            "note": "Euro 5b"
+          },
+          {
+            "id": "136-5b-6",
+            "euroClasses": [
+              "6",
+              "6b",
+              "6c",
+              "6d-temp",
+              "6d",
+              "6e",
+              "7"
+            ],
+            "firstRegistrationTo": "2015-08-31",
+            "adjustPct": 100,
+            "note": "Euro 6 με πρώτη ταξινόμηση έως 31.8.2015"
+          },
+          {
+            "id": "136-5a",
+            "euroClasses": [
+              "6",
+              "6b",
+              "6c",
+              "6d-temp",
+              "6d",
+              "6e",
+              "7"
+            ],
+            "firstRegistrationTo": "2018-08-31",
+            "adjustPct": 50,
+            "note": "Euro 6 με πρώτη ταξινόμηση έως 31.8.2018"
+          }
+        ]
+      },
+      "exemptions": [
+        {
+          "id": "bev-fcev",
+          "sourceId": "N5222_136",
+          "status": "OK",
+          "powertrains": [
+            "BEV",
+            "FCEV"
+          ],
+          "exemptPct": 100,
+          "note": "Αμιγώς ηλεκτρικά / υδρογόνου: δεν υπόκεινται σε τέλος"
+        },
+        {
+          "id": "136-6a-promo",
+          "sourceId": "N5313_10",
+          "status": "VERIFY",
+          "powertrains": [
+            "HEV",
+            "PHEV"
+          ],
+          "co2MaxGKm": 75,
+          "expectedRegistrationFrom": "2025-11-01",
+          "expectedRegistrationTo": "2026-05-31",
+          "exemptPct": 75,
+          "note": "Παρ. 6α: υβριδικά ≤75 g/km που εισήχθησαν 1/11/2025–31/5/2026"
+        },
+        {
+          "id": "hybrid-le50",
+          "sourceId": "E2039_2026",
+          "status": "OK",
+          "powertrains": [
+            "HEV",
+            "PHEV"
+          ],
+          "co2MaxGKm": 50,
+          "exemptPct": 75,
+          "note": "Υβριδικά ≤50 g/km: απαλλαγή 75% (καθεστώς έως 31/12/2026)"
+        },
+        {
+          "id": "hybrid-ge51",
+          "sourceId": "E2039_2026",
+          "status": "OK",
+          "powertrains": [
+            "HEV",
+            "PHEV"
+          ],
+          "co2MinGKm": 51,
+          "exemptPct": 50,
+          "note": "Υβριδικά ≥51 g/km: απαλλαγή 50% (καθεστώς έως 31/12/2026)"
+        }
+      ],
+      "environmentalFee": {
+        "sourceId": "N4710_2020",
+        "status": "VERIFY",
+        "rules": [
+          {
+            "euroClasses": [
+              "4"
+            ],
+            "amountEur": 3000
+          },
+          {
+            "euroClasses": [
+              "5",
+              "5a",
+              "5b"
+            ],
+            "amountEur": 1000
+          }
+        ],
+        "historicExempt": true
+      },
+      "registrationBan": {
+        "sourceId": "N4710_2020",
+        "status": "VERIFY",
+        "euroClasses": [
+          "none",
+          "1",
+          "2",
+          "3"
+        ],
+        "historicExempt": true
+      },
+      "historic": {
+        "status": "VERIFY",
+        "minAgeYears": 30
+      },
+      "newMeansOfTransport": {
+        "sourceId": "VAT_NMT",
+        "status": "VERIFY",
+        "maxAgeMonths": 6,
+        "maxKm": 6000,
+        "vatRatePct": 24,
+        "vatBaseIncludesRegistrationTax": true
+      }
+    },
+    {
+      "id": "2027-01-01",
+      "effectiveFrom": "2027-01-01",
+      "effectiveTo": null,
+      "selectedBy": "expectedRegistrationDate",
+      "summary": "Από 1/1/2027 (ν. 5313/2026 άρθρο 10): όλα τα υβριδικά 50% ανεξαρτήτως CO2, ηλεκτρικά/υδρογόνου 0%.",
+      "verify": [
+        "Ο συνδυασμός προσαύξησης CO2 και Euro (παρ. 3 και 5 άρθρου 136) εφαρμόζεται πολλαπλασιαστικά (συντελεστής × (1+CO2) × (1+Euro)). Ο νόμος δεν το ορίζει ρητά· να επιβεβαιωθεί με πραγματικό εκκαθαριστικό.",
+        "Η κλίμακα εφαρμόζεται στη φορολογητέα αξία ΠΡΙΝ τις μειώσεις (παρ. 2α άρθρου 136) και ο μέσος συντελεστής που προκύπτει εφαρμόζεται στην απομειωμένη αξία. Ερμηνεία προς επιβεβαίωση.",
+        "Ο πίνακας απομείωσης είναι της Α.Υ.Ο. ΔΕΦΚΦΔ 1192035/2017 (ισχύς από 7/1/2018). Δεν βρέθηκε νεότερη απόφαση· να επιβεβαιωθεί ότι ισχύει ακόμα.",
+        "Ηλικία κάτω των 6 μηνών: γραμμική αναγωγή από 0% έως το ποσοστό των 6 μηνών (άρθρο 11 §3 Α.1203/2019, «αναλογικά»).",
+        "Μείωση λόγω χιλιομέτρων: 0,10% ανά 500 km πάνω από 15.000 km/έτος, με όριο 10%. Ο «συντελεστής 0,10» ερμηνεύεται ως 0,10 ποσοστιαίες μονάδες.",
+        "Ήπια υβριδικά (MHEV, 48V): η απαλλαγή εφαρμόζεται μόνο αν το πιστοποιητικό συμμόρφωσης (COC) τα χαρακτηρίζει υβριδικά ηλεκτρικά. Ο πελάτης το επιβεβαιώνει ανά αυτοκίνητο.",
+        "Περιβαλλοντικό τέλος Euro 4 / Euro 5: ποσά από δευτερογενή πηγή (ν. 4710/2020 και τροπολογία 2022). Να επιβεβαιωθεί ότι ισχύει και με ποια ποσά.",
+        "Απαγόρευση ταξινόμησης Euro 1–3 (εκτός οχημάτων ιστορικού ενδιαφέροντος άνω των 30 ετών): να επιβεβαιωθεί.",
+        "Αυτοκίνητα ιστορικού ενδιαφέροντος (>30 ετών): υπολογίζονται με τους γενικούς κανόνες και εμφανίζεται προειδοποίηση· το ειδικό καθεστώς ΟΙΘ δεν έχει μοντελοποιηθεί.",
+        "Καινούργιο μεταφορικό μέσο: η βάση ΦΠΑ 24% περιλαμβάνει το τέλος ταξινόμησης (όπως στις λιανικές τιμές καινούργιων). Να επιβεβαιωθεί."
+      ],
+      "sources": [
+        {
+          "id": "N5222_136",
+          "title": "Ν. 5222/2025 (Εθνικός Τελωνειακός Κώδικας), άρθρο 136 – Τέλος ταξινόμησης επιβατικών αυτοκινήτων ιδιωτικής χρήσης (όπως τροποποιήθηκε με ν. 5313/2026)",
+          "url": "https://www.taxheaven.gr/law/5222/2025/arthro/136"
+        },
+        {
+          "id": "N5222_142",
+          "title": "Ν. 5222/2025, άρθρο 142 – Φορολογητέα αξία επιβατικών αυτοκινήτων",
+          "url": "https://www.taxheaven.gr/law/5222/2025/arthro/142"
+        },
+        {
+          "id": "N5222_146",
+          "title": "Ν. 5222/2025, άρθρο 146 §4 – εφαρμόζονται οι συντελεστές που ισχύουν όταν το τέλος καθίσταται απαιτητό",
+          "url": "https://www.taxheaven.gr/law/5313/2026/arthro/11"
+        },
+        {
+          "id": "N5313_10",
+          "title": "Ν. 5313/2026 (Α' 102), άρθρο 10 – Μείωση απαλλαγής υβριδικών ανεξαρτήτως CO2",
+          "url": "https://www.taxheaven.gr/law/5313/2026/arthro/10"
+        },
+        {
+          "id": "E2039_2026",
+          "title": "Εγκύκλιος ΑΑΔΕ Ε.2039/17-07-2026 – εφαρμογή άρθρου 10 ν. 5313/2026 (παλαιό καθεστώς έως 31-12-2026)",
+          "url": "https://www.aade.gr/sites/default/files/2026-07/e2039_2026.pdf"
+        },
+        {
+          "id": "FEK4618_2017",
+          "title": "Α.Υ.Ο. ΔΕΦΚΦΔ 1192035 ΕΞ 2017 (ΦΕΚ Β' 4618/28-12-2017) – Ποσοστά απομείωσης ανά ηλικία και κατηγορία αμαξώματος",
+          "url": "https://www.taxheaven.gr/circulars/27780/ariom-defkfd-1192035-ex-2017"
+        },
+        {
+          "id": "A1203_2019",
+          "title": "Απόφαση ΑΑΔΕ Α.1203/2019 – τιμοκατάλογοι, άρθρο 9 (ειδικές περιπτώσεις), άρθρο 11 (απομείωση, ενδιάμεσοι μήνες)",
+          "url": "https://www.taxheaven.gr/circulars/30942/a-1203-2019"
+        },
+        {
+          "id": "N4710_2020",
+          "title": "Ν. 4710/2020 – Περιβαλλοντικό τέλος εισαγόμενων μεταχειρισμένων (Euro 4: 3.000 €, Euro 5a: 1.000 €) και τροπολογία 02/2022 (Euro 5b: 1.000 €). Δευτερογενής πηγή – δεν εντοπίστηκε το ισχύον κείμενο.",
+          "url": "https://www.gocar.gr/news/feed/38742,Neo_xaratsi_1000_eyrw_sta_eisagomena_met.html"
+        },
+        {
+          "id": "VAT_NMT",
+          "title": "Κώδικας ΦΠΑ – καινούργια μεταφορικά μέσα (≤6 μήνες ή ≤6.000 km) φορολογούνται με ΦΠΑ στην Ελλάδα",
+          "url": null
+        }
+      ],
+      "taxableValue": {
+        "sourceId": "N5222_142",
+        "depreciation": {
+          "sourceId": "FEK4618_2017",
+          "status": "VERIFY",
+          "interpolation": "linear-monthly",
+          "belowFirstRow": "linear-from-zero",
+          "table": [
+            {
+              "ageYears": 0.5,
+              "suv_atv": 11,
+              "hatchback": 9,
+              "sedan": 15,
+              "cabrio": 11,
+              "coupe_roadster": 12,
+              "mpv": 9
+            },
+            {
+              "ageYears": 1.0,
+              "suv_atv": 22,
+              "hatchback": 19,
+              "sedan": 30,
+              "cabrio": 22,
+              "coupe_roadster": 25,
+              "mpv": 19
+            },
+            {
+              "ageYears": 1.5,
+              "suv_atv": 25,
+              "hatchback": 24,
+              "sedan": 33,
+              "cabrio": 26,
+              "coupe_roadster": 25,
+              "mpv": 23
+            },
+            {
+              "ageYears": 2.0,
+              "suv_atv": 29,
+              "hatchback": 28,
+              "sedan": 36,
+              "cabrio": 30,
+              "coupe_roadster": 29,
+              "mpv": 27
+            },
+            {
+              "ageYears": 2.5,
+              "suv_atv": 35,
+              "hatchback": 32,
+              "sedan": 40,
+              "cabrio": 33,
+              "coupe_roadster": 32,
+              "mpv": 33
+            },
+            {
+              "ageYears": 3.0,
+              "suv_atv": 37,
+              "hatchback": 37,
+              "sedan": 43,
+              "cabrio": 36,
+              "coupe_roadster": 36,
+              "mpv": 36
+            },
+            {
+              "ageYears": 3.5,
+              "suv_atv": 44,
+              "hatchback": 43,
+              "sedan": 50,
+              "cabrio": 42,
+              "coupe_roadster": 41,
+              "mpv": 43
+            },
+            {
+              "ageYears": 4.0,
+              "suv_atv": 50,
+              "hatchback": 49,
+              "sedan": 57,
+              "cabrio": 48,
+              "coupe_roadster": 47,
+              "mpv": 49
+            },
+            {
+              "ageYears": 4.5,
+              "suv_atv": 56,
+              "hatchback": 55,
+              "sedan": 64,
+              "cabrio": 54,
+              "coupe_roadster": 53,
+              "mpv": 55
+            },
+            {
+              "ageYears": 5.0,
+              "suv_atv": 62,
+              "hatchback": 61,
+              "sedan": 72,
+              "cabrio": 60,
+              "coupe_roadster": 59,
+              "mpv": 61
+            },
+            {
+              "ageYears": 5.5,
+              "suv_atv": 66,
+              "hatchback": 64,
+              "sedan": 74,
+              "cabrio": 64,
+              "coupe_roadster": 63,
+              "mpv": 64
+            },
+            {
+              "ageYears": 6.0,
+              "suv_atv": 68,
+              "hatchback": 67,
+              "sedan": 76,
+              "cabrio": 67,
+              "coupe_roadster": 66,
+              "mpv": 67
+            },
+            {
+              "ageYears": 6.5,
+              "suv_atv": 71,
+              "hatchback": 70,
+              "sedan": 78,
+              "cabrio": 69,
+              "coupe_roadster": 68,
+              "mpv": 70
+            },
+            {
+              "ageYears": 7.0,
+              "suv_atv": 73,
+              "hatchback": 72,
+              "sedan": 80,
+              "cabrio": 72,
+              "coupe_roadster": 71,
+              "mpv": 72
+            },
+            {
+              "ageYears": 7.5,
+              "suv_atv": 75,
+              "hatchback": 74,
+              "sedan": 81,
+              "cabrio": 74,
+              "coupe_roadster": 73,
+              "mpv": 75
+            },
+            {
+              "ageYears": 8.0,
+              "suv_atv": 77,
+              "hatchback": 76,
+              "sedan": 83,
+              "cabrio": 76,
+              "coupe_roadster": 75,
+              "mpv": 77
+            },
+            {
+              "ageYears": 8.5,
+              "suv_atv": 79,
+              "hatchback": 78,
+              "sedan": 84,
+              "cabrio": 78,
+              "coupe_roadster": 77,
+              "mpv": 78
+            },
+            {
+              "ageYears": 9.0,
+              "suv_atv": 80,
+              "hatchback": 80,
+              "sedan": 85,
+              "cabrio": 79,
+              "coupe_roadster": 79,
+              "mpv": 80
+            },
+            {
+              "ageYears": 9.5,
+              "suv_atv": 82,
+              "hatchback": 81,
+              "sedan": 86,
+              "cabrio": 81,
+              "coupe_roadster": 80,
+              "mpv": 82
+            },
+            {
+              "ageYears": 10.0,
+              "suv_atv": 83,
+              "hatchback": 83,
+              "sedan": 87,
+              "cabrio": 82,
+              "coupe_roadster": 82,
+              "mpv": 83
+            },
+            {
+              "ageYears": 10.5,
+              "suv_atv": 84,
+              "hatchback": 83,
+              "sedan": 88,
+              "cabrio": 83,
+              "coupe_roadster": 83,
+              "mpv": 84
+            },
+            {
+              "ageYears": 11.0,
+              "suv_atv": 85,
+              "hatchback": 84,
+              "sedan": 89,
+              "cabrio": 84,
+              "coupe_roadster": 84,
+              "mpv": 85
+            },
+            {
+              "ageYears": 11.5,
+              "suv_atv": 86,
+              "hatchback": 85,
+              "sedan": 89,
+              "cabrio": 85,
+              "coupe_roadster": 85,
+              "mpv": 86
+            },
+            {
+              "ageYears": 12.0,
+              "suv_atv": 87,
+              "hatchback": 86,
+              "sedan": 90,
+              "cabrio": 86,
+              "coupe_roadster": 86,
+              "mpv": 87
+            },
+            {
+              "ageYears": 12.5,
+              "suv_atv": 88,
+              "hatchback": 87,
+              "sedan": 90,
+              "cabrio": 87,
+              "coupe_roadster": 87,
+              "mpv": 88
+            },
+            {
+              "ageYears": 13.0,
+              "suv_atv": 88,
+              "hatchback": 88,
+              "sedan": 90,
+              "cabrio": 88,
+              "coupe_roadster": 87,
+              "mpv": 89
+            },
+            {
+              "ageYears": 13.5,
+              "suv_atv": 89,
+              "hatchback": 89,
+              "sedan": 91,
+              "cabrio": 88,
+              "coupe_roadster": 88,
+              "mpv": 89
+            },
+            {
+              "ageYears": 14.0,
+              "suv_atv": 90,
+              "hatchback": 89,
+              "sedan": 91,
+              "cabrio": 89,
+              "coupe_roadster": 89,
+              "mpv": 90
+            },
+            {
+              "ageYears": 14.5,
+              "suv_atv": 90,
+              "hatchback": 90,
+              "sedan": 91,
+              "cabrio": 89,
+              "coupe_roadster": 89,
+              "mpv": 91
+            },
+            {
+              "ageYears": 15.0,
+              "suv_atv": 90,
+              "hatchback": 90,
+              "sedan": 91,
+              "cabrio": 90,
+              "coupe_roadster": 89,
+              "mpv": 91
+            },
+            {
+              "ageYears": 15.5,
+              "suv_atv": 90,
+              "hatchback": 90,
+              "sedan": 91,
+              "cabrio": 90,
+              "coupe_roadster": 89,
+              "mpv": 91
+            },
+            {
+              "ageYears": 16.0,
+              "suv_atv": 95,
+              "hatchback": 95,
+              "sedan": 95,
+              "cabrio": 95,
+              "coupe_roadster": 95,
+              "mpv": 95
+            }
+          ]
+        },
+        "mileage": {
+          "sourceId": "N5222_142",
+          "status": "VERIFY",
+          "averageKmPerYear": 15000,
+          "stepKm": 500,
+          "pctPerStep": 0.1,
+          "maxPct": 10
+        },
+        "maxTotalDepreciationPct": 95
+      },
+      "brackets": {
+        "sourceId": "N5222_136",
+        "status": "OK",
+        "mode": "progressive-pre-depreciation-scaled",
+        "bands": [
+          {
+            "upToEur": 14000,
+            "ratePct": 4
+          },
+          {
+            "upToEur": 17000,
+            "ratePct": 26
+          },
+          {
+            "upToEur": 20000,
+            "ratePct": 53
+          },
+          {
+            "upToEur": 25000,
+            "ratePct": 62
+          },
+          {
+            "upToEur": 30000,
+            "ratePct": 71
+          },
+          {
+            "upToEur": null,
+            "ratePct": 30
+          }
+        ]
+      },
+      "co2": {
+        "sourceId": "N5222_136",
+        "status": "OK",
+        "tables": [
+          {
+            "cycle": "NEDC",
+            "firstRegistrationTo": "2020-12-31",
+            "bands": [
+              {
+                "upToGKm": 100,
+                "adjustPct": -5
+              },
+              {
+                "upToGKm": 120,
+                "adjustPct": 0
+              },
+              {
+                "upToGKm": 140,
+                "adjustPct": 10
+              },
+              {
+                "upToGKm": 160,
+                "adjustPct": 20
+              },
+              {
+                "upToGKm": 180,
+                "adjustPct": 30
+              },
+              {
+                "upToGKm": 200,
+                "adjustPct": 40
+              },
+              {
+                "upToGKm": 250,
+                "adjustPct": 60
+              },
+              {
+                "upToGKm": null,
+                "adjustPct": 100
+              }
+            ]
+          },
+          {
+            "cycle": "WLTP",
+            "firstRegistrationFrom": "2021-01-01",
+            "bands": [
+              {
+                "upToGKm": 130,
+                "adjustPct": -5
+              },
+              {
+                "upToGKm": 156,
+                "adjustPct": 0
+              },
+              {
+                "upToGKm": 182,
+                "adjustPct": 10
+              },
+              {
+                "upToGKm": 208,
+                "adjustPct": 20
+              },
+              {
+                "upToGKm": 234,
+                "adjustPct": 30
+              },
+              {
+                "upToGKm": 260,
+                "adjustPct": 40
+              },
+              {
+                "upToGKm": 325,
+                "adjustPct": 60
+              },
+              {
+                "upToGKm": null,
+                "adjustPct": 100
+              }
+            ]
+          }
+        ],
+        "notProvenAdjustPct": 100,
+        "combineWithEuro": "multiplicative",
+        "combineStatus": "VERIFY"
+      },
+      "euro": {
+        "sourceId": "N5222_136",
+        "status": "OK",
+        "plainEuro5": [
+          {
+            "firstRegistrationTo": "2012-12-31",
+            "treatAs": "5a"
+          },
+          {
+            "firstRegistrationTo": null,
+            "treatAs": "5b"
+          }
+        ],
+        "plainEuro5Status": "VERIFY",
+        "rules": [
+          {
+            "id": "136-5d",
+            "euroClasses": [
+              "none"
+            ],
+            "adjustPct": 200,
+            "note": "Συμβατικής τεχνολογίας (χωρίς Euro)"
+          },
+          {
+            "id": "136-5c",
+            "euroClasses": [
+              "1",
+              "2",
+              "3",
+              "4",
+              "5a",
+              "6a"
+            ],
+            "adjustPct": 200,
+            "note": "Euro 1–4, 5a, 6a"
+          },
+          {
+            "id": "136-5b-5b",
+            "euroClasses": [
+              "5b"
+            ],
+            "adjustPct": 100,
+            "note": "Euro 5b"
+          },
+          {
+            "id": "136-5b-6",
+            "euroClasses": [
+              "6",
+              "6b",
+              "6c",
+              "6d-temp",
+              "6d",
+              "6e",
+              "7"
+            ],
+            "firstRegistrationTo": "2015-08-31",
+            "adjustPct": 100,
+            "note": "Euro 6 με πρώτη ταξινόμηση έως 31.8.2015"
+          },
+          {
+            "id": "136-5a",
+            "euroClasses": [
+              "6",
+              "6b",
+              "6c",
+              "6d-temp",
+              "6d",
+              "6e",
+              "7"
+            ],
+            "firstRegistrationTo": "2018-08-31",
+            "adjustPct": 50,
+            "note": "Euro 6 με πρώτη ταξινόμηση έως 31.8.2018"
+          }
+        ]
+      },
+      "exemptions": [
+        {
+          "id": "bev-fcev",
+          "sourceId": "N5313_10",
+          "status": "OK",
+          "powertrains": [
+            "BEV",
+            "FCEV"
+          ],
+          "exemptPct": 100,
+          "note": "Αμιγώς ηλεκτρικά / κυψέλες υδρογόνου: δεν υπόκεινται σε τέλος"
+        },
+        {
+          "id": "hybrid-all",
+          "sourceId": "N5313_10",
+          "status": "OK",
+          "powertrains": [
+            "HEV",
+            "PHEV"
+          ],
+          "exemptPct": 50,
+          "note": "Υβριδικά: απαλλαγή 50% ανεξαρτήτως CO2 (από 1/1/2027)"
+        }
+      ],
+      "environmentalFee": {
+        "sourceId": "N4710_2020",
+        "status": "VERIFY",
+        "rules": [
+          {
+            "euroClasses": [
+              "4"
+            ],
+            "amountEur": 3000
+          },
+          {
+            "euroClasses": [
+              "5",
+              "5a",
+              "5b"
+            ],
+            "amountEur": 1000
+          }
+        ],
+        "historicExempt": true
+      },
+      "registrationBan": {
+        "sourceId": "N4710_2020",
+        "status": "VERIFY",
+        "euroClasses": [
+          "none",
+          "1",
+          "2",
+          "3"
+        ],
+        "historicExempt": true
+      },
+      "historic": {
+        "status": "VERIFY",
+        "minAgeYears": 30
+      },
+      "newMeansOfTransport": {
+        "sourceId": "VAT_NMT",
+        "status": "VERIFY",
+        "maxAgeMonths": 6,
+        "maxKm": 6000,
+        "vatRatePct": 24,
+        "vatBaseIncludesRegistrationTax": true
+      }
+    }
+  ]
+}

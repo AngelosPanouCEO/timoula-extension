@@ -1,0 +1,24 @@
+{
+  "name": "real-example-name",
+  "description": "What this case shows",
+  "status": "verified",
+  "source": "Where the expected numbers come from",
+  "input": {
+    "ltpfEur": 0,
+    "extrasEur": 0,
+    "firstRegistration": "2019-05-31",
+    "expectedRegistration": "2026-11-15",
+    "mileageKm": 0,
+    "bodyCategory": "hatchback",
+    "co2GKm": 0,
+    "euroClass": "6d",
+    "powertrain": "ICE",
+    "mhevCountsAsHybrid": false
+  },
+  "expected": {
+    "registrationTaxEur": 0,
+    "environmentalFeeEur": 0,
+    "taxableValueEur": null,
+    "toleranceEur": 1
+  }
+}

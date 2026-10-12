@@ -1,0 +1,15 @@
+{
+  "name": "@timoula/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ./build.mjs",
+    "dev": "node ./build.mjs --watch"
+  },
+  "dependencies": {
+    "@timoula/core": "*",
+    "idb": "^8.0.4",
+    "preact": "^10.29.8"
+  }
+}

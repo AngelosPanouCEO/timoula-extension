@@ -1,0 +1,24 @@
+{
+  "name": "07-euro4-2006-floor",
+  "description": "Euro 4 (+200%), CO2 167 NEDC (+30%), απομείωση στο όριο 95%, περιβαλλοντικό τέλος 3.000 €",
+  "status": "placeholder",
+  "source": "Υπολογισμός με τους κανόνες της έκδοσης (ανεξάρτητη υλοποίηση σε Python). ΔΕΝ είναι επιβεβαιωμένο από εκκαθαριστικό τελωνείου.",
+  "input": {
+    "ltpfEur": 30000,
+    "firstRegistration": "2006-04-30",
+    "expectedRegistration": "2026-11-11",
+    "mileageKm": 65413,
+    "bodyCategory": "cabrio",
+    "co2GKm": 167,
+    "euroClass": "4",
+    "powertrain": "ICE",
+    "extrasEur": 0,
+    "mhevCountsAsHybrid": false
+  },
+  "expected": {
+    "registrationTaxEur": 1868.1,
+    "environmentalFeeEur": 3000,
+    "taxableValueEur": 1500.0,
+    "toleranceEur": 0.05
+  }
+}

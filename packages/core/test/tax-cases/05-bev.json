@@ -1,0 +1,24 @@
+{
+  "name": "05-bev",
+  "description": "Αμιγώς ηλεκτρικό: μηδενικό τέλος",
+  "status": "placeholder",
+  "source": "Υπολογισμός με τους κανόνες της έκδοσης (ανεξάρτητη υλοποίηση σε Python). ΔΕΝ είναι επιβεβαιωμένο από εκκαθαριστικό τελωνείου.",
+  "input": {
+    "ltpfEur": 30000,
+    "firstRegistration": "2021-08-31",
+    "expectedRegistration": "2026-11-11",
+    "mileageKm": 66407,
+    "bodyCategory": "hatchback",
+    "co2GKm": 0,
+    "euroClass": null,
+    "powertrain": "BEV",
+    "extrasEur": 0,
+    "mhevCountsAsHybrid": false
+  },
+  "expected": {
+    "registrationTaxEur": 0,
+    "environmentalFeeEur": 0,
+    "taxableValueEur": 11346.77,
+    "toleranceEur": 0.05
+  }
+}
