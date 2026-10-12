@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { COUNTRY_NAMES, PRODUCT, todayIso } from '@timoula/core';
-import { allEntries, deleteEntry, saveEntry, type HistoryEntry } from '../../shared/db';
+import { allEntries, dedupeHistory, deleteEntry, saveEntry, type HistoryEntry } from '../../shared/db';
 import * as fmt from '../../shared/format';
 import { historyToCsv } from '../../shared/historyCsv';
 import { loadSettings, type AppSettings } from '../../shared/settings';
@@ -37,7 +37,8 @@ function History() {
   const [error, setError] = useState<string | null>(null);
 
   const reload = () =>
-    allEntries()
+    dedupeHistory()
+      .then(allEntries)
       .then(setEntries)
       .catch((e) => setError(String(e)));
   useEffect(() => {

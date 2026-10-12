@@ -110,6 +110,8 @@ export function formFromEntry(prev: HistoryEntry, current: FormState): FormState
     powerKw: m.powerKw ?? current.powerKw,
     gearbox: (m.gearbox as Gearbox | null) ?? current.gearbox,
     firstRegistration: i.firstRegistration,
+    // A date the client set by hand is kept; otherwise it stays "today + N days".
+    expectedRegistration: m.editedFields.includes('expectedRegistration') ? i.expectedRegistration : current.expectedRegistration,
     mileageKm: current.mileageKm ?? i.mileageKm,
     co2GKm: i.co2GKm,
     euroClass: i.euroClass,

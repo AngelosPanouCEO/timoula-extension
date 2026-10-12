@@ -5,3 +5,4 @@ dist/
 coverage/
 apps/extension/dist-e2e/
 scratch/
+*.zip

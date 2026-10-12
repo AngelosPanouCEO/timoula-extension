@@ -6,7 +6,8 @@ import {
 import { matchSite } from '../extract/sites';
 import { activeTab, extractFromTab, openPage, openTab } from '../shared/chromeApi';
 import { APP_VERSION, ltpfRecords, taxRules } from '../shared/data';
-import { entriesForListing, listingKeyOf, newId, saveEntry, type HistoryEntry } from '../shared/db';
+import { entryForListing, listingKeyOf, newId, saveEntry, type HistoryEntry } from '../shared/db';
+import { entrySignature } from '../shared/historyMerge';
 import * as fmt from '../shared/format';
 import type { I18nKey } from '../shared/i18n';
 import { loadSettings, type AppSettings } from '../shared/settings';
@@ -125,15 +126,28 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
   const [records, setRecords] = useState<LtpfRecord[] | null>(null);
   const [previous, setPrevious] = useState<HistoryEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  // One history entry per listing: a reopened listing continues its existing entry.
   const entryId = useRef(newId());
   const createdAt = useRef(new Date().toISOString());
+  const sessionStart = useRef(new Date().toISOString());
+  const lastSaved = useRef<string | null>(null);
   const listingKey = listingKeyOf(listing);
 
   useEffect(() => {
     void ltpfRecords().then(setRecords);
-    void entriesForListing(listingKey)
-      .then((list) => setPrevious(list[0] ?? null))
-      .catch(() => setPrevious(null));
+    void entryForListing(listingKey)
+      .then((prev) => {
+        if (prev) {
+          entryId.current = prev.id;
+          createdAt.current = prev.createdAt;
+          lastSaved.current = entrySignature(prev);
+          setForm((f) => formFromEntry(prev, f));
+        }
+        setPrevious(prev);
+      })
+      .catch(() => setPrevious(null))
+      .finally(() => setLoaded(true));
   }, [listingKey]);
 
   const set: SetField = (key, value, markEdited = true) => {
@@ -228,7 +242,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
 
   // Autosave (debounced): one history entry per popup session.
   useEffect(() => {
-    if (eligibility.status === 'non-eu') return;
+    if (!loaded || eligibility.status === 'non-eu') return;
     // Save complete calculations, and incomplete ones only once the client has typed something.
     if (!outcome?.ok && form.edited.length === 0 && !form.notes) return;
     const handle = setTimeout(() => {
@@ -236,7 +250,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       // Price history records the price the listing showed each time it was opened.
       const listed = listing.priceCents.value;
       const base = previous?.priceHistory ?? [];
-      const priceHistory = listed !== null && (base.length === 0 || base[base.length - 1]!.priceCents !== listed) ? [...base, { at: createdAt.current, priceCents: listed }] : base;
+      const priceHistory = listed !== null && (base.length === 0 || base[base.length - 1]!.priceCents !== listed) ? [...base, { at: sessionStart.current, priceCents: listed }] : base;
       const entry: HistoryEntry = {
         id: entryId.current,
         listingKey,
@@ -262,12 +276,17 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
         appVersion: APP_VERSION,
         vinStatus: form.vin ? 'received' : 'none',
       };
+      const signature = entrySignature(entry);
+      if (signature === lastSaved.current) return; // nothing changed: do not touch the entry
       saveEntry(entry)
-        .then(() => outcome?.ok && setToast(t('save.saved')))
+        .then(() => {
+          lastSaved.current = signature;
+          if (outcome?.ok) setToast(t('save.saved'));
+        })
         .catch((e) => setToast(t('save.error', { error: String(e) })));
     }, 800);
     return () => clearTimeout(handle);
-  }, [form, records, previous]);
+  }, [form, records, previous, loaded]);
 
   useEffect(() => {
     if (!toast) return;
@@ -305,8 +324,8 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
                   : t('banner.priceSame', { now: fmt.money(lang, listedNow) })}
               </span>
               <span class="spacer" />
-              <button type="button" onClick={() => setForm((f) => formFromEntry(previous, f))}>
-                {t('banner.loadPrevious')}
+              <button type="button" onClick={() => setForm(initialForm(listing, settings))}>
+                {t('banner.resetToPage')}
               </button>
             </div>
           </Banner>

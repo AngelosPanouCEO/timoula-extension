@@ -2,6 +2,7 @@
  * Local database (IndexedDB): calculation history and the client's own ΛΤΠΦ records.
  * Nothing here leaves the browser in phase 1.
  */
+import { mergeListingEntries } from './historyMerge';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { PRODUCT, type CalculationInputs, type CostBreakdown, type ListingData, type LtpfCriterion, type LtpfRecord, type MarketComparison, type RegistrationTaxBreakdown, type Verdict } from '@timoula/core';
 
@@ -105,6 +106,34 @@ export async function allEntries(): Promise<HistoryEntry[]> {
 export async function entriesForListing(listingKey: string): Promise<HistoryEntry[]> {
   const list = await (await db()).getAllFromIndex('calculations', 'byListing', listingKey);
   return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** The single entry of a listing (merging any duplicates left by older versions). */
+export async function entryForListing(listingKey: string): Promise<HistoryEntry | null> {
+  const list = await entriesForListing(listingKey);
+  if (!list.length) return null;
+  const { keep, remove } = mergeListingEntries(list);
+  if (remove.length) {
+    const tx = (await db()).transaction('calculations', 'readwrite');
+    await Promise.all([tx.store.put(keep), ...remove.map((id) => tx.store.delete(id)), tx.done]);
+  }
+  return keep;
+}
+
+/** Merge duplicate entries of every listing. Returns how many entries were removed. */
+export async function dedupeHistory(): Promise<number> {
+  const all = await allEntries();
+  const groups = new Map<string, HistoryEntry[]>();
+  for (const e of all) groups.set(e.listingKey, [...(groups.get(e.listingKey) ?? []), e]);
+  let removed = 0;
+  for (const list of groups.values()) {
+    if (list.length < 2) continue;
+    const { keep, remove } = mergeListingEntries(list);
+    const tx = (await db()).transaction('calculations', 'readwrite');
+    await Promise.all([tx.store.put(keep), ...remove.map((id) => tx.store.delete(id)), tx.done]);
+    removed += remove.length;
+  }
+  return removed;
 }
 
 export async function deleteEntry(id: string): Promise<void> {

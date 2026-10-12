@@ -87,6 +87,7 @@ if (!live) {
   check('01 shows official ΛΤΠΦ 21.620,81 €', t.includes('Επίσημη τιμή') && t.includes('21.620,81'));
   check('01 asks for the missing Euro class', t.includes('κλάση Euro'));
   await popup.selectOption('label:has-text("Κλάση Euro") select', '5b');
+  await popup.fill('label:has-text("Αναμενόμενη ταξινόμηση") input', '2026-11-11'); // fixed date → same tax as tax-cases/01
   await popup.waitForTimeout(300);
   const t2 = await text(popup);
   check('01 registration tax 1.237,34 € after choosing Euro 5b', t2.includes('1.237,34'), t2.match(/Τέλος ταξινόμησης\s+([\d.,]+ €)/)?.[1] ?? '');
@@ -166,10 +167,19 @@ if (!live) {
   check('unknown tab → friendly message', (await text(p)).includes('Άνοιξε μια αγγελία'));
 }
 
-// Reopen 01 → previous calculation banner
+// Reopen 01 three times → same entry continues, earlier choices kept, no duplicates
 {
-  const { popup } = await openPopupFor(byName('01'), '01-reopened');
-  check('01 reopened shows the earlier calculation', (await text(popup)).includes('Υπολογίστηκε ξανά'));
+  for (let i = 0; i < 3; i++) {
+    const { popup } = await openPopupFor(byName('01'), '01-reopened');
+    const t = await text(popup);
+    if (i === 0) {
+      check('01 reopened continues the earlier calculation', t.includes('Συνέχεια του υπολογισμού'));
+      check('01 reopened keeps the Euro 5b choice (tax 1.237,34 €)', t.includes('1.237,34'));
+      check('01 reopened keeps the market prices (median 10.200 €)', t.includes('10.200'));
+    }
+    await popup.waitForTimeout(1200);
+    await popup.close();
+  }
 }
 
 // History page
@@ -181,6 +191,8 @@ if (!live) {
   await h.screenshot({ path: join(shots, 'history.png'), fullPage: true });
   const t = await text(h);
   check('history lists the Subaru XV calculation', t.includes('Subaru XV'));
+  const xvRows = await h.locator('table.history tbody tr', { hasText: 'Subaru XV' }).count();
+  check('history has ONE entry for the listing opened 4 times', xvRows === 1, `${xvRows} rows`);
   const [download] = await Promise.all([h.waitForEvent('download'), h.click('text=Εξαγωγή CSV')]);
   const csvPath = join(shots, 'history.csv');
   await download.saveAs(csvPath);
