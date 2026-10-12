@@ -45,6 +45,11 @@ const context = await chromium.launchPersistentContext(join(tmpdir(), `timoula-e
 
 const live = process.env.E2E_LIVE === '1';
 if (!live) {
+  await context.route(/^https:\/\/www\.car\.gr\//, (route) =>
+    route.request().resourceType() === 'document'
+      ? route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: readFileSync(join(fixtures, 'cargr_audi_a3_results.html'), 'utf8') })
+      : route.fulfill({ status: 204, body: '' }),
+  );
   await context.route(/^https:\/\/(suchen\.mobile\.de|www\.autoscout24\.[a-z]+)\//, async (route) => {
     const url = route.request().url();
     const file = pages[url];
@@ -180,6 +185,45 @@ if (!live) {
     await popup.waitForTimeout(1200);
     await popup.close();
   }
+}
+
+// car.gr: search link format and the (d) page reader
+{
+  const { popup } = await openPopupFor(byName('01'), '01-cargr');
+  const [searchTab] = await Promise.all([context.waitForEvent('page'), popup.click('text=Άνοιγμα αναζήτησης car.gr')]);
+  await searchTab.waitForLoadState('domcontentloaded');
+  const u = new URL(searchTab.url());
+  check('car.gr search link: /used-cars/subaru/xv.html with years and km', u.pathname === '/used-cars/subaru/xv.html' && u.searchParams.get('registration-from') === '2013' && u.searchParams.get('mileage-to') === '223000', searchTab.url());
+  const s = await context.newPage();
+  await s.goto(`chrome-extension://${extId}/pages/settings/index.html`);
+  await s.click('label:has-text("Ανάγνωση τιμών από τη σελίδα car.gr") input');
+  await s.waitForTimeout(300);
+  await s.close();
+  // Tabs opened by the extension bypass Playwright routing (they would hit Cloudflare), so load the
+  // same URL in a tab the test controls, served from the saved car.gr page.
+  const searchUrl = searchTab.url();
+  await searchTab.close();
+  const cargr = await context.newPage();
+  await cargr.goto(searchUrl, { waitUntil: 'domcontentloaded' });
+  const { popup: p2 } = await openPopupFor(byName('01'), '01-cargr-reader');
+  await cargr.bringToFront();
+  if (process.env.E2E_DEBUG) console.log(await worker.evaluate(async () => {
+    const tabs = await chrome.tabs.query({ url: 'https://www.car.gr/*' });
+    const out = [];
+    for (const t of tabs) {
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ['extract.js'] });
+        const [r] = await chrome.scripting.executeScript({ target: { tabId: t.id }, func: () => globalThis.__timoulaReadCarGr?.() ?? 'no-fn' });
+        out.push({ url: t.url, status: t.status, r: JSON.stringify(r?.result).slice(0, 200) });
+      } catch (e) { out.push({ url: t.url, err: String(e) }); }
+    }
+    return out;
+  }));
+  await p2.click('text=Ανάγνωση τιμών από την καρτέλα car.gr');
+  await p2.waitForTimeout(500);
+  const t = await text(p2);
+  check('car.gr reader reads 16.900 € from the results page', t.includes('Διαβάστηκαν 1 τιμές') && t.includes('16.900'), t.match(/Διαβάστηκαν[^\n]*/)?.[0] ?? '');
+  await p2.screenshot({ path: join(shots, '01-cargr-reader.png'), fullPage: true });
 }
 
 // History page

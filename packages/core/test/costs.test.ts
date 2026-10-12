@@ -82,21 +82,29 @@ describe('market value', () => {
     expect(verdict(26_500_00, { lowCents: 25_000_00, highCents: 26_000_00 }, 100_000).level).toBe('marginal');
   });
 
-  it('builds a car.gr search URL from the template and drops empty filters', () => {
-    const url = buildCarGrUrl({ make: 'Subaru', model: 'XV', firstRegistrationYear: 2014, mileageKm: 178_000, fuel: 'diesel' }, DEFAULT_CARGR_SETTINGS)!;
+  it('builds the car.gr search URL in the format of a real search', () => {
+    const url = buildCarGrUrl({ make: 'Audi', model: 'A3', firstRegistrationYear: 2016, mileageKm: 120_000, fuel: 'petrol' }, DEFAULT_CARGR_SETTINGS)!;
     const u = new URL(url);
-    expect(u.hostname).toBe('www.car.gr');
+    expect(u.origin + u.pathname).toBe('https://www.car.gr/used-cars/audi/a3.html');
     expect(Object.fromEntries(u.searchParams)).toEqual({
-      make: 'Subaru',
-      model: 'XV',
-      'registration-from': '2013',
-      'registration-to': '2015',
-      'mileage-from': '134000',
-      'mileage-to': '223000',
-      fuel_type: 'diesel',
+      offer_type: 'sale',
+      'registration-from': '2015',
+      'registration-to': '2017',
+      'mileage-from': '90000',
+      'mileage-to': '150000',
     });
-    const noKm = new URL(buildCarGrUrl({ make: 'Subaru', model: null, firstRegistrationYear: null, mileageKm: null, fuel: null }, DEFAULT_CARGR_SETTINGS)!);
-    expect([...noKm.searchParams.keys()]).toEqual(['make']);
+  });
+
+  it('slugs names and drops empty path segments and filters', () => {
+    expect(new URL(buildCarGrUrl({ make: 'Mercedes-Benz', model: 'C 200', firstRegistrationYear: null, mileageKm: null, fuel: null }, DEFAULT_CARGR_SETTINGS)!).pathname).toBe('/used-cars/mercedes-benz/c-200.html');
+    const makeOnly = new URL(buildCarGrUrl({ make: 'Škoda', model: null, firstRegistrationYear: null, mileageKm: null, fuel: null }, DEFAULT_CARGR_SETTINGS)!);
+    expect(makeOnly.pathname).toBe('/used-cars/skoda.html');
+    expect([...makeOnly.searchParams.keys()]).toEqual(['offer_type']);
+  });
+
+  it('adds fuel when the template has a fuel placeholder', () => {
+    const url = buildCarGrUrl({ make: 'Audi', model: 'A3', firstRegistrationYear: null, mileageKm: null, fuel: 'diesel' }, { ...DEFAULT_CARGR_SETTINGS, urlTemplate: 'https://www.car.gr/used-cars/{make}/{model}.html?fuel_type={fuel}' });
+    expect(new URL(url!).searchParams.get('fuel_type')).toBe('diesel');
   });
 
   it('supports path placeholders', () => {

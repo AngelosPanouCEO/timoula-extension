@@ -29,9 +29,28 @@
 (Autovista/Eurotax Hellas, DAT) in parallel; a backend provider can replace car.gr later
 through the same `MarketValueProvider` interface.
 
-## Search URL template — VERIFY
+## Search URL format (from a real search, 12/10/2026)
 
-The car.gr URL format could not be checked (blocked). The template is a setting
-(Settings → Market value): run any search on car.gr, copy the address and replace the values with
-`{make} {model} {yearFrom} {yearTo} {kmFrom} {kmTo} {fuel}`. Path placeholders such as
-`/classifieds/cars/{make}/{model}/` also work.
+```
+https://www.car.gr/used-cars/audi/a3.html?make=14093&model=15197&registration-to=2022&mileage-to=150000
+                     &gearbox_type=automatic&euroclass=6&offer_type=sale&…
+```
+
+- Range filters use `-from` / `-to`: `registration-from/to` (year), `mileage-from/to` (km), `price-from/to`.
+- Make and model appear twice: as slugs in the path (`/audi/a3.html`) and as numeric ids
+  (`make=14093&model=15197`). We only know the slugs, so the link uses the path.
+  **VERIFY:** that `/used-cars/{make}/{model}.html` alone filters (open a link from the popup and check).
+- Fuel: parameter `fuel_type`, but its values are unknown, so the default link does not filter by fuel.
+  One search with a fuel selected tells us the values.
+
+Default template (editable in Settings):
+`https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-from={kmFrom}&mileage-to={kmTo}`
+
+## Page reader (d) — how it reads
+
+car.gr embeds the search state in the page (`<script id="__NUXT_DATA__">`, Nuxt "devalue"
+format). The reader decodes it and takes `pinia.classifiedsSearch.rows[]` → `rawPrice`,
+`registration`, `mileage`, `fueltype`, `withoutVat`, `crashed`, plus `stats.total`. Crashed cars
+and VAT-free (business) prices are excluded from the median. Only the page the client is
+looking at is read (24 results per page). Tested on a saved results page
+(`apps/extension/test/fixtures/cargr_audi_a3_results.html`) in unit tests and in Chromium.

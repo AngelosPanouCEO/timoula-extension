@@ -207,3 +207,25 @@ describe('privacy', () => {
     expect(json).not.toMatch(/contactName|phone|whatsapp/i);
   });
 });
+
+describe('car.gr results page (reader d)', () => {
+  it('reads the rows car.gr embeds in the page', async () => {
+    const { readCarGrResults } = await import('../src/extract/cargr');
+    const html = readFileSync(join(FIX, 'cargr_audi_a3_results.html'), 'utf8');
+    const window = new Window({ url: 'https://www.car.gr/', settings: { disableJavaScriptEvaluation: true, disableJavaScriptFileLoading: true, disableCSSFileLoading: true } });
+    const doc = new window.DOMParser().parseFromString(html, 'text/html') as unknown as Document;
+    const res = readCarGrResults(doc);
+    expect(res.source).toBe('nuxt');
+    expect(res.total).toBe(1);
+    expect(res.rows).toEqual([
+      { priceCents: 1_690_000, title: 'Audi A3 2015 1.4 TFSI DSG', registration: '1/2015', mileageKm: 103_100, fuel: 'Βενζίνη', withoutVat: false, crashed: false, isNew: false },
+    ]);
+  });
+
+  it('a page without data yields no rows (dropdown prices are ignored)', async () => {
+    const { readCarGrResults } = await import('../src/extract/cargr');
+    const window = new Window({ settings: { disableJavaScriptEvaluation: true } });
+    const doc = new window.DOMParser().parseFromString('<select><option class="price">30.000 €</option></select><div class="price">12.500 €</div>', 'text/html') as unknown as Document;
+    expect(readCarGrResults(doc).rows.map((r) => r.priceCents)).toEqual([1_250_000]);
+  });
+});

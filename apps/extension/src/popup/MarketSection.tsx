@@ -15,8 +15,14 @@ export function MarketSection(props: { form: FormState; set: SetField; searchUrl
     try {
       const res = await readCarGrPrices();
       if (!res.tabFound) return setReadStatus(t('market.readPage.none'));
-      props.set('pagePricesCents', res.pricesCents);
-      setReadStatus(res.pricesCents.length ? t('market.readPage.found', { n: res.pricesCents.length }) : t('market.readPage.zero'));
+      const rows = res.results?.rows ?? [];
+      // Crashed cars and VAT-free (business) prices are not comparable.
+      const usable = rows.filter((r) => !r.crashed && !r.withoutVat);
+      props.set('pagePricesCents', usable.map((r) => r.priceCents));
+      if (!usable.length) return setReadStatus(t('market.readPage.zero'));
+      const parts = [t('market.readPage.found', { n: usable.length, total: res.results?.total ?? usable.length })];
+      if (rows.length > usable.length) parts.push(t('market.readPage.excluded', { n: rows.length - usable.length }));
+      setReadStatus(parts.join(' '));
     } catch (e) {
       setReadStatus(String(e));
     }

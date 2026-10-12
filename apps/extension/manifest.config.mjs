@@ -27,7 +27,7 @@ export function buildManifest({ product, version, e2e = false }) {
   };
   if (e2e) {
     // Test build only: lets automated tests inject without a real toolbar click.
-    manifest.host_permissions = ['https://*.mobile.de/*', 'https://*.autoscout24.de/*', 'https://*.autoscout24.pl/*', 'https://*.autoscout24.nl/*', 'https://*.autoscout24.at/*'];
+    manifest.host_permissions = ['https://*.mobile.de/*', 'https://*.autoscout24.de/*', 'https://*.autoscout24.pl/*', 'https://*.autoscout24.nl/*', 'https://*.autoscout24.at/*', 'https://www.car.gr/*'];
     manifest.name = `${product.name} (E2E)`;
   }
   const locales = {

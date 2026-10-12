@@ -1,5 +1,5 @@
 /** App settings in chrome.storage.local (small, non-personal). */
-import { DEFAULT_CARGR_SETTINGS, DEFAULT_COST_SETTINGS, type CarGrSettings, type CostSettings, type Lang } from '@timoula/core';
+import { OUTDATED_CARGR_TEMPLATES, DEFAULT_CARGR_SETTINGS, DEFAULT_COST_SETTINGS, type CarGrSettings, type CostSettings, type Lang } from '@timoula/core';
 import { detectLang } from './i18n';
 
 export interface AppSettings {
@@ -23,7 +23,13 @@ function merge(stored: Partial<AppSettings> | undefined): AppSettings {
     schema: 1,
     lang: stored.lang === 'en' || stored.lang === 'el' ? stored.lang : d.lang,
     costs: { ...d.costs, ...stored.costs, driveBackByCountry: { ...d.costs.driveBackByCountry, ...stored.costs?.driveBackByCountry } },
-    cargr: { ...d.cargr, ...stored.cargr, fuelCodes: { ...d.cargr.fuelCodes, ...stored.cargr?.fuelCodes } },
+    cargr: {
+      ...d.cargr,
+      ...stored.cargr,
+      fuelCodes: { ...d.cargr.fuelCodes, ...stored.cargr?.fuelCodes },
+      // An untouched old default is upgraded; a template the client edited is kept.
+      urlTemplate: stored.cargr?.urlTemplate && !OUTDATED_CARGR_TEMPLATES.includes(stored.cargr.urlTemplate) ? stored.cargr.urlTemplate : d.cargr.urlTemplate,
+    },
   };
 }
 

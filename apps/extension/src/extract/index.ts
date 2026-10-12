@@ -5,6 +5,7 @@
  */
 import type { ExtractionResult } from '@timoula/core';
 import { parseAutoScout24 } from './autoscout24';
+import { readCarGrResults, type CarGrResults } from './cargr';
 import { parseMobileDe } from './mobilede';
 import { matchSite } from './sites';
 
@@ -21,8 +22,11 @@ export function extractListing(doc: Document, url: string): ExtractionResult {
 declare global {
   // eslint-disable-next-line no-var
   var __timoulaExtract: (() => ExtractionResult) | undefined;
+  // eslint-disable-next-line no-var
+  var __timoulaReadCarGr: (() => CarGrResults) | undefined;
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   globalThis.__timoulaExtract = () => extractListing(document, location.href);
+  globalThis.__timoulaReadCarGr = () => readCarGrResults(document);
 }
