@@ -26,7 +26,8 @@ function merge(stored: Partial<AppSettings> | undefined): AppSettings {
     cargr: {
       ...d.cargr,
       ...stored.cargr,
-      fuelCodes: { ...d.cargr.fuelCodes, ...stored.cargr?.fuelCodes },
+      // Not editable in the UI; stored copies are old defaults ("petrol", "hybrid"…), so always use the current ones.
+      fuelCodes: d.cargr.fuelCodes,
       // An untouched old default is upgraded; a template the client edited is kept.
       urlTemplate: stored.cargr?.urlTemplate && !OUTDATED_CARGR_TEMPLATES.includes(stored.cargr.urlTemplate) ? stored.cargr.urlTemplate : d.cargr.urlTemplate,
     },

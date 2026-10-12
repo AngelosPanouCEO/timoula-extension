@@ -5,7 +5,7 @@
  *    Off by default pending a legal check of car.gr's terms (see docs/market-value.md).
  * Later providers (licensed valuation data, backend aggregation) implement the same interface.
  */
-import type { Fuel } from '../types';
+import type { Fuel, Powertrain } from '../types';
 import { priceStats, type PriceStats } from './stats';
 
 export interface MarketQuery {
@@ -14,6 +14,8 @@ export interface MarketQuery {
   firstRegistrationYear: number | null;
   mileageKm: number | null;
   fuel: Fuel | null;
+  /** Confirmed powertrain only; separates plug-in from other hybrids. */
+  powertrain?: Powertrain | null;
 }
 
 export interface Comparable {

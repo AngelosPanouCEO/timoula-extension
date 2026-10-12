@@ -9,6 +9,8 @@ import {
   runCalculation,
   verdict,
   type CalculationInputs,
+  type Fuel,
+  type Powertrain,
 } from '../src';
 
 describe('cost breakdown', () => {
@@ -91,7 +93,27 @@ describe('market value', () => {
       'registration-from': '2015',
       'registration-to': '2017',
       'mileage-to': '130000',
+      fuel_type: '1',
     });
+  });
+
+  it('maps fuel to car.gr fuel_type codes, using the confirmed powertrain for hybrids', () => {
+    const fuelType = (fuel: Fuel | null, powertrain: Powertrain | null = null) =>
+      new URL(buildCarGrUrl({ make: 'Audi', model: 'A3', firstRegistrationYear: null, mileageKm: null, fuel, powertrain }, DEFAULT_CARGR_SETTINGS)!).searchParams.get('fuel_type');
+    // Real search with "Πετρέλαιο" selected: fuel_type=2.
+    expect(fuelType('diesel')).toBe('2');
+    expect(fuelType('petrol')).toBe('1');
+    expect(fuelType('electric')).toBe('3');
+    expect(fuelType('lpg')).toBe('4');
+    expect(fuelType('petrol_electric')).toBe('8');
+    expect(fuelType('petrol_electric', 'PHEV')).toBe('12');
+    expect(fuelType('diesel', 'PHEV')).toBe('13');
+    expect(fuelType('diesel_electric', 'MHEV')).toBe('10');
+    // Forester e-Boxer listed as "Benzin" but confirmed MHEV → petrol hybrid.
+    expect(fuelType('petrol', 'MHEV')).toBe('8');
+    expect(fuelType(null, 'BEV')).toBe('3');
+    expect(fuelType('other')).toBeNull();
+    expect(fuelType(null)).toBeNull();
   });
 
   it('mileage: only "up to" the car\'s km + 10.000, rounded up to 1.000 (Forester 11/2017, 61.658 km)', () => {
@@ -112,7 +134,7 @@ describe('market value', () => {
 
   it('adds fuel when the template has a fuel placeholder', () => {
     const url = buildCarGrUrl({ make: 'Audi', model: 'A3', firstRegistrationYear: null, mileageKm: null, fuel: 'diesel' }, { ...DEFAULT_CARGR_SETTINGS, urlTemplate: 'https://www.car.gr/used-cars/{make}/{model}.html?fuel_type={fuel}' });
-    expect(new URL(url!).searchParams.get('fuel_type')).toBe('diesel');
+    expect(new URL(url!).searchParams.get('fuel_type')).toBe('2');
   });
 
   it('supports path placeholders', () => {

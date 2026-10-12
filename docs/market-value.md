@@ -3,7 +3,7 @@
 ## What ships in phase 1
 
 - **(c) Assisted mode — default.** The popup opens a car.gr search pre-filtered by make, model,
-  year (±1) and mileage (±25%) and fuel. The client reads the prices and types/pastes them; the
+  year (±1), mileage ("up to" km + 10.000) and fuel. The client reads the prices and types/pastes them; the
   popup shows median, range and count and the verdict for options A and B.
 - **(d) Page reader — OFF by default.** When the client turns it on in Settings, Chrome asks for
   permission to `https://www.car.gr/*`; the popup can then read prices from the car.gr results
@@ -40,11 +40,27 @@ https://www.car.gr/used-cars/audi/a3.html?make=14093&model=15197&registration-to
 - Make and model appear twice: as slugs in the path (`/audi/a3.html`) and as numeric ids
   (`make=14093&model=15197`). We only know the slugs, so the link uses the path.
   **VERIFY:** that `/used-cars/{make}/{model}.html` alone filters (open a link from the popup and check).
-- Fuel: parameter `fuel_type`, but its values are unknown, so the default link does not filter by fuel.
-  One search with a fuel selected tells us the values.
+- Fuel: parameter `fuel_type` (diesel = `2` confirmed by a real search; the rest from car.gr's filter list):
+
+  | Our fuel / powertrain | car.gr | `fuel_type` |
+  |---|---|---|
+  | petrol | Βενζίνη | 1 |
+  | diesel | Πετρέλαιο | 2 |
+  | electric, BEV | Ηλεκτρικό | 3 |
+  | LPG | Αέριο(lpg) - βενζίνη | 4 |
+  | petrol HEV / MHEV | Υβριδικό βενζίνη | 8 |
+  | diesel HEV / MHEV | Υβριδικό πετρέλαιο | 10 |
+  | CNG | Φυσικό αέριο(cng) - βενζίνη | 11 |
+  | petrol PHEV | Υβριδικό plug-in βενζίνη | 12 |
+  | diesel PHEV | Υβριδικό plug-in πετρέλαιο | 13 |
+  | hydrogen, FCEV | Υδρογόνο | 14 |
+
+  A confirmed powertrain wins over the listing's fuel text (a Forester e-Boxer listed as "Benzin"
+  searches Υβριδικό βενζίνη). "Other" adds no fuel filter. Greek sellers do not always list mild
+  hybrids as hybrids, so an MHEV search can miss some comparables.
 
 Default template (editable in Settings):
-`https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-to={kmTo}`
+`https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-to={kmTo}&fuel_type={fuel}`
 
 Comparables: years = car's year −1 … +1, mileage = "up to" the car's km + 10.000 (no lower limit),
 rounded up to the next 1.000 km. All three numbers are settings.

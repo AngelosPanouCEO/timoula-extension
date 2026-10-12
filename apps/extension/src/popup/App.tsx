@@ -225,6 +225,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
     firstRegistrationYear: form.firstRegistration ? Number(form.firstRegistration.slice(0, 4)) : null,
     mileageKm: form.mileageKm,
     fuel: form.fuel,
+    powertrain: powertrainUsable ? form.powertrain : null,
   };
   const searchUrl = buildCarGrUrl(marketQuery, settings.cargr);
   const comparables: Comparable[] = [
