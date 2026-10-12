@@ -199,12 +199,16 @@ function Settings({ settings, onChange }: { settings: AppSettings; onChange: (s:
         </label>
         <div class="settings-grid" style={{ marginTop: '8px' }}>
           <label>
-            <span class="field-label">{t('settings.market.yearSpan')}</span>
-            <input type="number" min={0} max={5} value={settings.cargr.yearSpan} onInput={(e) => update({ ...settings, cargr: { ...settings.cargr, yearSpan: Number(e.currentTarget.value) || 0 } })} />
+            <span class="field-label">{t('settings.market.yearsBefore')}</span>
+            <input type="number" min={0} max={10} value={settings.cargr.yearsBefore} onInput={(e) => update({ ...settings, cargr: { ...settings.cargr, yearsBefore: Math.max(0, Number(e.currentTarget.value) || 0) } })} />
           </label>
           <label>
-            <span class="field-label">{t('settings.market.kmSpan')}</span>
-            <input type="number" min={0} max={100} value={settings.cargr.mileageSpanPct} onInput={(e) => update({ ...settings, cargr: { ...settings.cargr, mileageSpanPct: Number(e.currentTarget.value) || 0 } })} />
+            <span class="field-label">{t('settings.market.yearsAfter')}</span>
+            <input type="number" min={0} max={10} value={settings.cargr.yearsAfter} onInput={(e) => update({ ...settings, cargr: { ...settings.cargr, yearsAfter: Math.max(0, Number(e.currentTarget.value) || 0) } })} />
+          </label>
+          <label>
+            <span class="field-label">{t('settings.market.kmMargin')}</span>
+            <input type="number" min={0} step={1000} value={settings.cargr.mileageMarginKm} onInput={(e) => update({ ...settings, cargr: { ...settings.cargr, mileageMarginKm: Math.max(0, Number(e.currentTarget.value) || 0) } })} />
           </label>
         </div>
         <label class="row" style={{ marginTop: '10px' }}>

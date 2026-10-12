@@ -193,7 +193,7 @@ if (!live) {
   const [searchTab] = await Promise.all([context.waitForEvent('page'), popup.click('text=Άνοιγμα αναζήτησης car.gr')]);
   await searchTab.waitForLoadState('domcontentloaded');
   const u = new URL(searchTab.url());
-  check('car.gr search link: /used-cars/subaru/xv.html with years and km', u.pathname === '/used-cars/subaru/xv.html' && u.searchParams.get('registration-from') === '2013' && u.searchParams.get('mileage-to') === '223000', searchTab.url());
+  check('car.gr search link: /used-cars/subaru/xv.html with years and km', u.pathname === '/used-cars/subaru/xv.html' && u.searchParams.get('registration-from') === '2013' && u.searchParams.get('mileage-to') === '188000' && !u.searchParams.has('mileage-from'), searchTab.url());
   const s = await context.newPage();
   await s.goto(`chrome-extension://${extId}/pages/settings/index.html`);
   await s.click('label:has-text("Ανάγνωση τιμών από τη σελίδα car.gr") input');

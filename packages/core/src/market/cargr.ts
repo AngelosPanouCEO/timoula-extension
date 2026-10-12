@@ -18,32 +18,35 @@ export interface CarGrSettings {
   /** VERIFY: parameter names were not checked against the live site (Cloudflare blocks automated access). */
   urlTemplate: string;
   fuelCodes: Partial<Record<Fuel, string>>;
-  yearSpan: number;
-  /** Mileage window around the listing, ± percent. */
-  mileageSpanPct: number;
+  /** Years before / after the car's first-registration year. */
+  yearsBefore: number;
+  yearsAfter: number;
+  /** Comparable cars: "up to" the car's mileage plus this margin (no lower limit). */
+  mileageMarginKm: number;
   /** (d) Read prices from the open car.gr page. Off by default. */
   pageReaderEnabled: boolean;
 }
 
 export const DEFAULT_CARGR_SETTINGS: CarGrSettings = {
   urlTemplate:
-    'https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-from={kmFrom}&mileage-to={kmTo}',
+    'https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-to={kmTo}',
   fuelCodes: { petrol: 'petrol', diesel: 'diesel', electric: 'electric', lpg: 'lpg', cng: 'cng', petrol_electric: 'hybrid', diesel_electric: 'hybrid' },
-  yearSpan: 1,
-  mileageSpanPct: 25,
+  yearsBefore: 1,
+  yearsAfter: 1,
+  mileageMarginKm: 10_000,
   pageReaderEnabled: false,
 };
 
 export function buildCarGrUrl(q: MarketQuery, s: CarGrSettings): string | null {
   if (!q.make) return null;
-  const roundKm = (n: number) => Math.round(n / 1000) * 1000;
   const values: Record<string, string | null> = {
     make: q.make,
     model: q.model,
-    yearFrom: q.firstRegistrationYear !== null ? String(q.firstRegistrationYear - s.yearSpan) : null,
-    yearTo: q.firstRegistrationYear !== null ? String(q.firstRegistrationYear + s.yearSpan) : null,
-    kmFrom: q.mileageKm !== null ? String(Math.max(0, roundKm(q.mileageKm * (1 - s.mileageSpanPct / 100)))) : null,
-    kmTo: q.mileageKm !== null ? String(roundKm(q.mileageKm * (1 + s.mileageSpanPct / 100))) : null,
+    yearFrom: q.firstRegistrationYear !== null ? String(q.firstRegistrationYear - s.yearsBefore) : null,
+    yearTo: q.firstRegistrationYear !== null ? String(q.firstRegistrationYear + s.yearsAfter) : null,
+    // Only an upper limit: car's km + margin, rounded up to the next 1.000 km.
+    kmFrom: null,
+    kmTo: q.mileageKm !== null ? String(Math.ceil((q.mileageKm + s.mileageMarginKm) / 1000) * 1000) : null,
     fuel: q.fuel ? (s.fuelCodes[q.fuel] ?? null) : null,
   };
   let url: URL;
@@ -81,6 +84,7 @@ export function carGrSlug(s: string): string {
 
 /** Earlier default templates, replaced automatically when a client still has them saved. */
 export const OUTDATED_CARGR_TEMPLATES = [
+  'https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-from={kmFrom}&mileage-to={kmTo}',
   'https://www.car.gr/classifieds/cars/?make={make}&model={model}&registration-from={yearFrom}&registration-to={yearTo}&mileage-from={kmFrom}&mileage-to={kmTo}&fuel_type={fuel}',
 ];
 

@@ -44,7 +44,10 @@ https://www.car.gr/used-cars/audi/a3.html?make=14093&model=15197&registration-to
   One search with a fuel selected tells us the values.
 
 Default template (editable in Settings):
-`https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-from={kmFrom}&mileage-to={kmTo}`
+`https://www.car.gr/used-cars/{make}/{model}.html?offer_type=sale&registration-from={yearFrom}&registration-to={yearTo}&mileage-to={kmTo}`
+
+Comparables: years = car's year −1 … +1, mileage = "up to" the car's km + 10.000 (no lower limit),
+rounded up to the next 1.000 km. All three numbers are settings.
 
 ## Page reader (d) — how it reads
 

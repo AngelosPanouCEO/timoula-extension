@@ -90,9 +90,17 @@ describe('market value', () => {
       offer_type: 'sale',
       'registration-from': '2015',
       'registration-to': '2017',
-      'mileage-from': '90000',
-      'mileage-to': '150000',
+      'mileage-to': '130000',
     });
+  });
+
+  it('mileage: only "up to" the car\'s km + 10.000, rounded up to 1.000 (Forester 11/2017, 61.658 km)', () => {
+    const u = new URL(buildCarGrUrl({ make: 'Subaru', model: 'Forester', firstRegistrationYear: 2017, mileageKm: 61_658, fuel: 'petrol' }, DEFAULT_CARGR_SETTINGS)!);
+    expect(u.searchParams.get('mileage-from')).toBeNull();
+    expect(u.searchParams.get('mileage-to')).toBe('72000');
+    expect([u.searchParams.get('registration-from'), u.searchParams.get('registration-to')]).toEqual(['2016', '2018']);
+    const custom = new URL(buildCarGrUrl({ make: 'Subaru', model: 'Forester', firstRegistrationYear: 2017, mileageKm: 61_658, fuel: null }, { ...DEFAULT_CARGR_SETTINGS, yearsBefore: 0, yearsAfter: 2, mileageMarginKm: 20_000 })!);
+    expect([custom.searchParams.get('registration-from'), custom.searchParams.get('registration-to'), custom.searchParams.get('mileage-to')]).toEqual(['2017', '2019', '82000']);
   });
 
   it('slugs names and drops empty path segments and filters', () => {
