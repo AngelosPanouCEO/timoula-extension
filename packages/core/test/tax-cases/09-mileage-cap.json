@@ -16,9 +16,9 @@
     "mhevCountsAsHybrid": false
   },
   "expected": {
-    "registrationTaxEur": 1625.42,
+    "registrationTaxEur": 1649.81,
     "environmentalFeeEur": 0,
-    "taxableValueEur": 7093.55,
+    "taxableValueEur": 7200,
     "toleranceEur": 0.05
   }
 }

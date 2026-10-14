@@ -18,7 +18,7 @@
   "expected": {
     "registrationTaxEur": 1868.1,
     "environmentalFeeEur": 3000,
-    "taxableValueEur": 1500.0,
+    "taxableValueEur": 1500,
     "toleranceEur": 0.05
   }
 }

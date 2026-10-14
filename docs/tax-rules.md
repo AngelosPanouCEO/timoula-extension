@@ -13,7 +13,8 @@ File: `packages/core/rules/gr-tax-rules.json` (revision `2026-10-12.1`).
 
 1. Taxable value = (ΛΤΠΦ + EXTRA equipment) × (1 − age/body depreciation) × (1 − mileage reduction); total reduction ≤ 95%.
    - Depreciation table: Α.Υ.Ο. ΔΕΦΚΦΔ 1192035 ΕΞ 2017 (ΦΕΚ Β' 4618/2017), by half-year and body
-     category, linear between months (Α.1203/2019 art. 11 §3).
+     category, linear between months (Α.1203/2019 art. 11 §3). Age counts **completed months** up to
+     the acceptance of the customs declaration (ΔΕΦΚ).
    - Mileage: 0.10% per 500 km above 15,000 km/year, max 10% (ν. 5222/2025 art. 142).
 2. Brackets (art. 136 §2α): 0–14k 4%, 14–17k 26%, 17–20k 53%, 20–25k 62%, 25–30k 71%, >30k 30%.
    For used cars the brackets are chosen on the value *before* depreciation; the weighted rate is
@@ -45,3 +46,12 @@ Plain "Euro 5" in a listing is mapped to 5a (first registration ≤ 31/12/2012) 
 One real customs assessment (εκκαθαριστικό) per pattern is enough to settle items 1–5:
 a Euro 6 car first registered before 9/2018, a Euro 5 car, and a car with excess mileage.
 Add each as a `verified` case in `packages/core/test/tax-cases/`.
+
+## Confirmed by real clearances
+
+| Case | What it confirmed |
+|---|---|
+| `real-001` Hyundai Kona 1.0 T-GDi, 09/2020 (BE), ΔΕΦΚ 14/10/2026: tax 222,72 € | Brackets on the value before depreciation, weighted rate on the taxable value · CO2 +10% from the NEDC table for a 2020 car (customs used NEDC 125 although the certificate also shows WLTP 145) · ΦΕΚ Β' 4618/2017 table still in use · age in completed months (6 years 15 days → 67%) · body category from the type-approval code (AF → MPV), not from the listing ("SUV") |
+
+Still unconfirmed: CO2 × Euro surcharges combined multiplicatively, mileage reduction, environmental
+fee, hybrid exemptions, new-means-of-transport VAT.

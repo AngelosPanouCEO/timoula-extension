@@ -99,10 +99,15 @@ export type RegistrationTaxResult =
 
 const ZERO_CO2: Powertrain[] = ['BEV', 'FCEV'];
 
-/** Depreciation percent for an age, interpolated monthly between the half-year rows. */
+/**
+ * Depreciation percent for an age, interpolated monthly between the half-year rows.
+ * Customs counts completed months (real clearance: 6 years and 15 days → the 6-year row).
+ */
 export function depreciationPct(ver: TaxRulesVersion, cat: BodyCategory, ageMonths: number): number {
-  const table = ver.taxableValue.depreciation.table;
-  const age = Math.max(0, ageMonths) / 12;
+  const dep = ver.taxableValue.depreciation;
+  const table = dep.table;
+  const months = Math.max(0, ageMonths);
+  const age = (dep.interpolation === 'linear-completed-months' ? Math.floor(months + 1e-9) : months) / 12;
   const first = table[0]!;
   if (age <= first.ageYears) return (first[cat] * age) / first.ageYears;
   const last = table[table.length - 1]!;

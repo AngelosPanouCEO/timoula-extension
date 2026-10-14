@@ -1,0 +1,24 @@
+{
+  "name": "real-001-hyundai-kona-2020-be",
+  "description": "Hyundai Kona 1.0 T-GDi 120ps Premium, 6MT 2WD, πρώτη ταξινόμηση 29/09/2020 (BE), 51.714 km, Euro 6, CO2 NEDC 125, MPV (κωδικός αμαξώματος AF)",
+  "status": "verified",
+  "source": "Πραγματικός εκτελωνισμός (ανωνυμοποιημένος): ΔΕΦΚ αποδεκτή 14/10/2026, Τελωνείο Δυτικής Αττικής. ΛΤΠΦ 14.206 € από τον τιμοκατάλογο Hyundai Hellas ισχύος 16/09/2020. Απομείωση 67% (MPV, 6 έτη και 15 ημέρες), φορολογητέα αξία 4.687,98 €, τέλος ταξινόμησης 222,72 €.",
+  "input": {
+    "ltpfEur": 14206,
+    "extrasEur": 0,
+    "firstRegistration": "2020-09-29",
+    "expectedRegistration": "2026-10-14",
+    "mileageKm": 51714,
+    "bodyCategory": "mpv",
+    "co2GKm": 125,
+    "euroClass": "6d-temp",
+    "powertrain": "ICE",
+    "mhevCountsAsHybrid": false
+  },
+  "expected": {
+    "registrationTaxEur": 222.72,
+    "environmentalFeeEur": 0,
+    "taxableValueEur": 4687.98,
+    "toleranceEur": 0.01
+  }
+}

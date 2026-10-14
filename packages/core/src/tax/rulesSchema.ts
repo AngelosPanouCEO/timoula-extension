@@ -57,7 +57,8 @@ const RulesVersionSchema = v.object({
     depreciation: v.object({
       sourceId: v.string(),
       status: Status,
-      interpolation: v.literal('linear-monthly'),
+      /** Between half-year rows, proportionally per month; 'linear-completed-months' ignores the days of a started month. */
+      interpolation: v.picklist(['linear-monthly', 'linear-completed-months']),
       belowFirstRow: v.literal('linear-from-zero'),
       table: v.pipe(v.array(DepreciationRow), v.minLength(1)),
     }),

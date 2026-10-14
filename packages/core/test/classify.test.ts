@@ -46,8 +46,8 @@ describe('powertrain suggestion', () => {
 
 describe('body category', () => {
   it.each([
-    ['SUV/Geländewagen/Pickup', 'suv_atv', true],
-    ['OffRoad', 'suv_atv', true],
+    ['SUV/Geländewagen/Pickup', 'suv_atv', false],
+    ['OffRoad', 'suv_atv', false],
     ['Kleinwagen', 'hatchback', true],
     ['Cabrio', 'cabrio', true],
     ['Coupé', 'coupe_roadster', true],
