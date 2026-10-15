@@ -74,7 +74,12 @@ export function VehicleSection(props: { listing: ListingData; form: FormState; s
             <NumberInput ariaLabel={t('field.hp')} value={f.powerHp} onChange={(v) => set('powerHp', v)} />
           </div>
         </Labeled>
-        <Labeled label={t('field.co2')} badge={badge('co2GKm', l.co2GKm)} missing={props.missing.has('co2')} hint={t('field.co2.hint')}>
+        <Labeled
+          label={t('field.co2')}
+          badge={f.co2FromLtpf ? <span class="badge">{t('source.ltpf')}</span> : badge('co2GKm', l.co2GKm)}
+          missing={props.missing.has('co2')}
+          hint={f.co2FromLtpf ? t('field.co2.fromLtpf') : t('field.co2.hint')}
+        >
           <NumberInput value={f.co2GKm} onChange={(v) => set('co2GKm', v)} />
         </Labeled>
         <Labeled label={t('field.euro')} badge={badge('euroClass', l.euroClass)} missing={props.missing.has('euroClass')}>

@@ -30,6 +30,8 @@ export interface FormMeta {
   powertrainConfirmed: boolean;
   commercialOverride: boolean;
   ltpf: LtpfChoice;
+  /** CO2 was copied from the chosen price-list version (the listing had none). */
+  co2FromLtpf?: boolean;
   /** Field names the client edited by hand. */
   editedFields: string[];
 }

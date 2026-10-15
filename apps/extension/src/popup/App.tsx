@@ -13,7 +13,7 @@ import type { I18nKey } from '../shared/i18n';
 import { loadSettings, type AppSettings } from '../shared/settings';
 import { Banner, LangContext, Toast, useT } from '../shared/ui';
 import { CostsSection } from './CostsSection';
-import { commercialCheck, formFromEntry, initialForm, NO_LTPF, powertrainSuggestionFor, toInputs, toMeta, type FormState } from './form';
+import { commercialCheck, withCo2From, formFromEntry, initialForm, NO_LTPF, powertrainSuggestionFor, toInputs, toMeta, type FormState } from './form';
 import { MarketSection } from './MarketSection';
 import { TaxInputs, TaxResult } from './TaxSection';
 import { VehicleSection, type SetField } from './VehicleSection';
@@ -156,6 +156,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       if (markEdited && !next.edited.includes(key)) next.edited = [...next.edited, key];
       if (key === 'powertrain') next.powertrainConfirmed = value !== null;
       if (key === 'ltpfCents') next.ltpf = { ...NO_LTPF, origin: 'manual' };
+      if (key === 'co2GKm') next.co2FromLtpf = false;
       return next;
     });
   };
@@ -172,16 +173,17 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       displacementCc: form.displacementCc,
       powerKw: form.powerKw,
       powerHp: form.powerHp,
-      co2GKm: form.co2GKm,
+      // A CO2 copied from a price-list version must not narrow the search for versions.
+      co2GKm: form.co2FromLtpf ? null : form.co2GKm,
       fuel: form.fuel,
       powertrain: form.powertrain,
       gearbox: form.gearbox,
     });
-  }, [records, form.make, form.model, form.version, form.firstRegistration, form.displacementCc, form.powerKw, form.powerHp, form.co2GKm, form.fuel, form.powertrain, form.gearbox]);
+  }, [records, form.make, form.model, form.version, form.firstRegistration, form.displacementCc, form.powerKw, form.powerHp, form.co2GKm, form.co2FromLtpf, form.fuel, form.powertrain, form.gearbox]);
 
   const useCandidate = (c: LtpfCandidate, markEdited: boolean) =>
     setForm((f) => ({
-      ...f,
+      ...withCo2From(f, c.record),
       ltpfCents: Math.round(c.record.ltpf_eur * 100),
       ltpf: {
         origin: 'table',
@@ -201,7 +203,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
     if (lookup.selected) {
       if (form.ltpf.recordId !== lookup.selected.record.id || form.ltpf.official !== lookup.selected.official) useCandidate(lookup.selected, false);
     } else if (form.ltpf.recordId && !lookup.candidates.some((c) => c.record.id === form.ltpf.recordId)) {
-      setForm((f) => ({ ...f, ltpfCents: null, ltpf: NO_LTPF }));
+      setForm((f) => ({ ...withCo2From(f, null), ltpfCents: null, ltpf: NO_LTPF }));
     }
   }, [lookup]);
 

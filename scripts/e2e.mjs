@@ -137,6 +137,8 @@ if (!live) {
   await popup.waitForTimeout(300);
   const t2 = await text(popup);
   check('19 after choosing Sportback Design: official ΛΤΠΦ 21.723,00 €', t2.includes('Επίσημη τιμή') && t2.includes('21.723,00'));
+  const co2 = await popup.inputValue('label:has-text("CO2 (g/km)") input');
+  check('19 listing has no CO2: 106 g/km from the price list, marked to confirm, tax calculated', co2 === '106' && t2.includes('από τον τιμοκατάλογο') && /Τέλος ταξινόμησης\s+[\d.,]+\s€/.test(t2), `CO2 ${co2}`);
   await popup.screenshot({ path: join(shots, '19-audi.png'), fullPage: true });
 }
 
