@@ -179,10 +179,17 @@ function priceListsOf(records: LtpfRecord[]): PriceList[] {
   });
 }
 
-function listCovers(list: PriceList, date: string): boolean {
-  if (date < list.validFrom) return false;
-  if (list.validTo) return date <= list.validTo;
-  return !list.endUnknown; // latest list, still current
+/**
+ * Whether one record is in force on a date. Validity is per record because importers file
+ * partial lists (only new versions) and several lists per date (one per model year), so a
+ * version stays valid until it is re-priced, not until the brand's next list.
+ * An open end (valid_to null) counts only when no later list of the brand exists; otherwise the
+ * end is unknown (a gap in the archive, e.g. Subaru 2020–2026).
+ */
+function recordCovers(r: LtpfRecord, date: string, latestListOfBrand: string): boolean {
+  if (date < r.valid_from) return false;
+  if (r.valid_to) return date <= r.valid_to;
+  return r.valid_from >= latestListOfBrand;
 }
 
 /** Distance in days-ish (ISO string compare) between a date and a list window, for "nearest other list". */
@@ -243,9 +250,9 @@ export function lookupLtpf(records: LtpfRecord[], q: LtpfQuery, syn: Synonyms = 
     criterion,
     official: criterion === 'exact' && isOfficialPrice(r),
   });
-  /** Records of the requested model in one list; electrified variants win when the car is electrified. */
-  const modelRecordsOf = (list: PriceList) => {
-    const recs = list.records.filter((r) => modelScores.has(r));
+  /** Records of the requested model; electrified variants win when the car is electrified. */
+  const modelRecordsOf = (records: LtpfRecord[]) => {
+    const recs = records.filter((r) => modelScores.has(r));
     if (q.powertrain && q.powertrain !== 'ICE') {
       const same = recs.filter((r) => r.powertrain === q.powertrain);
       if (same.length) return same;
@@ -254,10 +261,11 @@ export function lookupLtpf(records: LtpfRecord[], q: LtpfQuery, syn: Synonyms = 
     return exactName.length ? exactName : recs;
   };
 
-  // Step 2–3: the list of the era.
-  const eraList = lists.find((l) => listCovers(l, date));
-  if (eraList) {
-    const inEra = modelRecordsOf(eraList);
+  // Step 2–3: the records in force on the date of first registration.
+  const latestListOfBrand = lists.length ? lists[lists.length - 1]!.validFrom : '';
+  const eraRecords = brandRecords.filter((r) => recordCovers(r, date, latestListOfBrand));
+  if (eraRecords.length) {
+    const inEra = modelRecordsOf(eraRecords);
     const exact = rank(inEra.map((r) => toCandidate(r, 'exact')).filter((c) => !hasMismatch(c.checks, STRICT_KEYS)));
     if (exact.length) {
       const single = pickSingle(exact);
@@ -271,9 +279,10 @@ export function lookupLtpf(records: LtpfRecord[], q: LtpfQuery, syn: Synonyms = 
   }
 
   // (γ) same model in the nearest other list.
-  const others = lists.filter((l) => l !== eraList).sort((a, b) => distanceToList(a, date) - distanceToList(b, date));
+  const inForce = new Set(eraRecords);
+  const others = [...lists].sort((a, b) => distanceToList(a, date) - distanceToList(b, date));
   for (const list of others) {
-    const recs = modelRecordsOf(list);
+    const recs = modelRecordsOf(list.records.filter((r) => !inForce.has(r)));
     const strict = rank(recs.map((r) => toCandidate(r, 'gamma')).filter((c) => !hasMismatch(c.checks, STRICT_KEYS)));
     const loose = strict.length ? strict : rank(recs.map((r) => toCandidate(r, 'gamma')).filter((c) => !hasMismatch(c.checks, SISTER_KEYS)));
     if (loose.length) {

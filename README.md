@@ -15,7 +15,7 @@ market comparison, local history. No backend yet; everything stays in the browse
 ```
 packages/core/            Pure TypeScript domain logic (no browser APIs; reused by the backend in phase 2)
   rules/gr-tax-rules.json Versioned registration-tax rules — the ONLY place with rates/brackets/tables
-  ltpf/                   ΛΤΠΦ seed data (Subaru), schema, SPEC.md, name synonyms
+  ltpf/                   ΛΤΠΦ data (Subaru, Audi), schema, SPEC.md, name synonyms, import tools
   src/tax/                Rules schema + calculation engine
   src/ltpf/               ΛΤΠΦ lookup (SPEC.md), CSV import/export
   src/classify/           Powertrain / body category / commercial-vehicle / EU checks

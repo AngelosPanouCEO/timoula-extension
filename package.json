@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc -p packages/core && tsc -p apps/extension",
     "check": "npm run typecheck && npm test",
-    "e2e": "node scripts/e2e.mjs",
+    "e2e": "node apps/extension/build.mjs --e2e && node scripts/e2e.mjs",
     "build:e2e": "node apps/extension/build.mjs --e2e"
   },
   "devDependencies": {

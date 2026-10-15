@@ -104,6 +104,12 @@ describe('AutoScout24 pages', () => {
     expect(v(l)).toMatchObject({ co2: 123, euro: null, fuel: 'diesel', seller: 'private', body: 'Kombi', priceEur: 2500 });
   });
 
+  it('19 Audi A3 Sportback 1.6 TDI 2018: Audi ΛΤΠΦ lookup inputs', () => {
+    const l = parse('19_audi_a3_sportback_1.6tdi_2018_autoscout24');
+    expect(v(l)).toMatchObject({ make: 'Audi', model: 'A3', priceEur: 13790, firstRegistration: '2018-03-31', mileageKm: 141893, fuel: 'diesel', cc: 1598, kw: 85, hp: 116, gearbox: 'automatic', country: 'DE' });
+    expect(l.version.value).toContain('Sportback design');
+  });
+
   it('10 BMW 320Cd 2006: WLTP block on a 2006 car does not set the cycle', () => {
     const l = parse('10_old_bmw_e46_320cd_cabrio_2006_autoscout24');
     expect(v(l)).toMatchObject({ co2: 167, euro: '4', body: 'Cabrio', firstRegistration: '2006-04-30' });

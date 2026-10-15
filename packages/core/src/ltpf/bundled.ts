@@ -1,4 +1,4 @@
-/** ΛΤΠΦ seed data shipped with this build (Subaru pilot, see ltpf/SPEC.md). */
+/** ΛΤΠΦ data shipped with this build (Subaru pilot, Audi archive 2005–2026; see ltpf/SPEC.md). */
 import datasetJson from '../../ltpf/ltpf-records.json';
 import { parseLtpfDataset, type LtpfDataset } from './schema';
 

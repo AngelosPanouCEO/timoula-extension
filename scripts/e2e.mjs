@@ -4,7 +4,7 @@
  * Listing pages are served from apps/extension/test/fixtures (network routed),
  * so the run is repeatable. Screenshots go to apps/extension/dist-e2e/screens/.
  *
- *   npm run build:e2e && npm run e2e            # fixtures
+ *   npm run e2e                                 # builds dist-e2e, then runs on the fixtures
  *   E2E_LIVE=1 npm run e2e                     # also try the live AutoScout24 URLs
  *   CHROMIUM_PATH=/path/to/chrome npm run e2e  # custom browser
  */
@@ -92,10 +92,10 @@ if (!live) {
   check('01 shows official ΛΤΠΦ 21.620,81 €', t.includes('Επίσημη τιμή') && t.includes('21.620,81'));
   check('01 asks for the missing Euro class', t.includes('κλάση Euro'));
   await popup.selectOption('label:has-text("Κλάση Euro") select', '5b');
-  await popup.fill('label:has-text("Αναμενόμενη ταξινόμηση") input', '2026-11-11'); // fixed date → same tax as tax-cases/01
+  await popup.fill('label:has-text("Αναμενόμενος εκτελωνισμός") input', '2026-11-11'); // fixed date → same tax as tax-cases/01
   await popup.waitForTimeout(300);
   const t2 = await text(popup);
-  check('01 registration tax 1.237,34 € after choosing Euro 5b', t2.includes('1.237,34'), t2.match(/Τέλος ταξινόμησης\s+([\d.,]+ €)/)?.[1] ?? '');
+  check('01 registration tax 1.243,43 € after choosing Euro 5b', t2.includes('1.243,43'), t2.match(/Τέλος ταξινόμησης\s+([\d.,]+ €)/)?.[1] ?? '');
   check('01 environmental fee 1.000 €', t2.includes('Περιβαλλοντικό τέλος'));
   check('01 shows options A and B', t2.includes('Α. Μεταφορά με νταλίκα') && t2.includes('Β. Οδήγηση μέχρι την Ελλάδα'));
   await popup.fill('textarea[placeholder]', '9.500\n11.000\n10.200');
@@ -126,6 +126,18 @@ if (!live) {
   check('03 after choosing PREMIUM: ΛΤΠΦ 33.812,77 € as estimate, tax calculated', t2.includes('33.812,77') && /Τέλος ταξινόμησης\s+[\d.,]+\s€/.test(t2));
   await popup.screenshot({ path: join(shots, '03-chosen.png'), fullPage: true });
   check('03 mild hybrid needs confirmation', t.includes('Ήπιο υβριδικό') && t.includes('Επιβεβαιώνω τον τύπο κινητήρα'));
+}
+
+// 19: Audi archive → official ΛΤΠΦ after choosing the version
+{
+  const { popup } = await openPopupFor(byName('19'), '19-audi');
+  const t = await text(popup);
+  check('19 Audi A3 1.6 TDI 03/2018 offers the 1.6 TDI S tronic versions of the 20/02/2018 list', /Ταιριάζουν \d+ εκδόσεις/.test(t) && t.includes('Sportback 1.6 TDI Design S tronic') && t.includes('21.723,00'));
+  await popup.click('.candidate:has-text("Sportback 1.6 TDI Design S tronic") button');
+  await popup.waitForTimeout(300);
+  const t2 = await text(popup);
+  check('19 after choosing Sportback Design: official ΛΤΠΦ 21.723,00 €', t2.includes('Επίσημη τιμή') && t2.includes('21.723,00'));
+  await popup.screenshot({ path: join(shots, '19-audi.png'), fullPage: true });
 }
 
 // 06: BMW 330e → PHEV suggested, CO2 missing
@@ -179,7 +191,7 @@ if (!live) {
     const t = await text(popup);
     if (i === 0) {
       check('01 reopened continues the earlier calculation', t.includes('Συνέχεια του υπολογισμού'));
-      check('01 reopened keeps the Euro 5b choice (tax 1.237,34 €)', t.includes('1.237,34'));
+      check('01 reopened keeps the Euro 5b choice (tax 1.243,43 €)', t.includes('1.243,43'));
       check('01 reopened keeps the market prices (median 10.200 €)', t.includes('10.200'));
     }
     await popup.waitForTimeout(1200);
@@ -241,7 +253,7 @@ if (!live) {
   const csvPath = join(shots, 'history.csv');
   await download.saveAs(csvPath);
   const csv = readFileSync(csvPath, 'utf8');
-  check('CSV export contains the calculation', csv.includes('registration_tax_eur') && csv.includes('1237.34'));
+  check('CSV export contains the calculation', csv.includes('registration_tax_eur') && csv.includes('1243.43'));
 }
 
 // Settings page
@@ -250,7 +262,8 @@ if (!live) {
   await s.goto(`chrome-extension://${extId}/pages/settings/index.html`);
   await s.waitForSelector('h1');
   await s.screenshot({ path: join(shots, 'settings.png'), fullPage: true });
-  check('settings show rules and ΛΤΠΦ table', (await text(s)).includes('311 εγγραφές'));
+  const st = await text(s);
+  check('settings show rules and ΛΤΠΦ table (Subaru + Audi: 6096 records)', /6\.?096 εγγραφές/.test(st), st.match(/[\d.]+ εγγραφές/)?.[0] ?? '');
   await s.click('text=English');
   await s.waitForTimeout(300);
   check('language switch to English', (await text(s)).includes('Settings'));

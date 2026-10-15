@@ -29,9 +29,71 @@ const q = (patch: Partial<LtpfQuery>): LtpfQuery => ({
 });
 
 describe('bundled ΛΤΠΦ data', () => {
-  it('loads the Subaru pilot (311 records)', () => {
-    expect(records).toHaveLength(311);
-    expect(records.every((r) => r.brand === 'SUBARU')).toBe(true);
+  it('loads the Subaru pilot (311 records) and the Audi archive', () => {
+    expect(records.filter((r) => r.brand === 'SUBARU')).toHaveLength(311);
+    const audi = records.filter((r) => r.brand === 'AUDI');
+    expect(audi.length).toBeGreaterThan(5000);
+    expect(records.every((r) => r.brand === 'SUBARU' || r.brand === 'AUDI')).toBe(true);
+    // Every Audi price was confirmed by a second, independent read of the PDF.
+    expect(audi.every((r) => r.verified && r.source_type === 'gr_official_pricelist' && r.source_sha256 && r.source_page)).toBe(true);
+    expect(new Set(records.map((r) => r.id)).size).toBe(records.length);
+  });
+
+  it('Audi records have one valid window per version (no overlaps for the same code and version)', () => {
+    const audi = records.filter((r) => r.brand === 'AUDI');
+    const byKey = new Map<string, typeof audi>();
+    for (const r of audi) {
+      const key = `${r.list_label?.split(' ')[0]}|${r.model}|${r.version}|${r.notes?.match(/πακέτο (\S+)/)?.[1] ?? ''}|${r.ltpf_eur}`;
+      byKey.set(key, [...(byKey.get(key) ?? []), r]);
+    }
+    for (const rs of byKey.values()) {
+      const sorted = [...rs].sort((a, b) => a.valid_from.localeCompare(b.valid_from));
+      for (let i = 1; i < sorted.length; i++) expect(sorted[i - 1]!.valid_to !== null && sorted[i - 1]!.valid_to! < sorted[i]!.valid_from).toBe(true);
+    }
+  });
+});
+
+describe('ΛΤΠΦ lookup: Audi archive', () => {
+  const audi = (patch: Partial<LtpfQuery>) => q({ make: 'Audi', ...patch });
+
+  it('fixture 19: A3 Sportback 1.6 TDI S tronic 03/2018 → versions of the 20/02/2018 list, Design = 21.723 € official', () => {
+    const r = lookupLtpf(
+      records,
+      audi({ model: 'A3', versionText: '1.6 TDI Sportback design *Ambientebeleuchtung*AHK*', firstRegistration: '2018-03-31', displacementCc: 1598, powerKw: 85, powerHp: 116, fuel: 'diesel', gearbox: 'automatic', powertrain: 'ICE' }),
+    );
+    expect(r.criterion).toBe('exact');
+    expect(r.status).toBe('choose');
+    const top = r.candidates[0]!;
+    expect(top.record.version).toBe('Sportback 1.6 TDI Design S tronic');
+    expect(top.record.ltpf_eur).toBe(21723);
+    expect(top.record.valid_from).toBe('2018-02-20');
+    expect(top.official).toBe(true);
+    expect(r.candidates.every((c) => c.record.power_ps === 116 && c.record.transmission === 'DCT')).toBe(true);
+  });
+
+  it('Q5 40 TDI quattro 02/2020: list without a VAT column (second read) → 37.722 € official', () => {
+    const r = lookupLtpf(
+      records,
+      audi({ model: 'Q5', versionText: '40 TDI quattro S tronic', firstRegistration: '2020-02-10', displacementCc: 1968, powerKw: 140, powerHp: 190, fuel: 'diesel', gearbox: 'automatic', powertrain: 'ICE' }),
+    );
+    expect(r.criterion).toBe('exact');
+    expect(r.candidates[0]!.record.ltpf_eur).toBe(37722);
+    expect(r.candidates[0]!.official).toBe(true);
+  });
+
+  it('listing model names with a body word use the base model (A3 Sportback → A3)', () => {
+    const r = lookupLtpf(records, audi({ model: 'A3 Sportback', versionText: '30 TFSI', firstRegistration: '2021-05-10', displacementCc: 999, powerKw: 81, powerHp: 110, fuel: 'petrol', gearbox: 'manual' }));
+    expect(r.criterion).toBe('exact');
+    expect(r.candidates[0]!.record.model).toBe('A3');
+    expect(r.candidates[0]!.record.version).toBe('Sportback 30 TFSI');
+  });
+
+  it('a new generation in a partial list does not end the old one: A3 8V 35 TFSI 08/2020 still official', () => {
+    const r = lookupLtpf(records, audi({ model: 'A3', versionText: 'Sportback 35 TFSI', firstRegistration: '2020-08-20', displacementCc: 1498, powerKw: 110, powerHp: 150, fuel: 'petrol', gearbox: 'manual' }));
+    expect(r.criterion).toBe('exact');
+    const v8 = r.candidates.find((c) => c.record.list_label?.startsWith('8VFAZC'));
+    expect(v8?.record.ltpf_eur).toBe(19788);
+    expect(v8?.official).toBe(true);
   });
 });
 
