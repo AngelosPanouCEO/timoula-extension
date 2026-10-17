@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkEligibility, checkVehicleKind, suggestBodyCategory, suggestPowertrain, type PowertrainInput } from '../src';
+import { checkEligibility, checkVehicleKind, euroFromFirstRegistration, suggestBodyCategory, suggestPowertrain, type PowertrainInput } from '../src';
 
 const pt = (p: Partial<PowertrainInput>) =>
   suggestPowertrain({ fuel: 'petrol', fuelRaw: null, make: null, model: null, version: null, title: null, batteryKwh: null, siteFlag: null, firstRegistrationYear: 2020, ...p });
@@ -79,5 +79,22 @@ describe('EU eligibility', () => {
     expect(checkEligibility('NO')).toEqual({ status: 'non-eu', country: 'NO' });
     expect(checkEligibility('EL')).toEqual({ status: 'eu', country: 'GR' });
     expect(checkEligibility(null)).toEqual({ status: 'unknown' });
+  });
+});
+
+describe('Euro class from the date of first registration', () => {
+  it('from 1/9/2015 every new car is Euro 6, so it can be filled in', () => {
+    expect(euroFromFirstRegistration('2019-12-31')).toMatchObject({ fill: '6', minimum: '6', endOfSeriesPossible: false });
+    expect(euroFromFirstRegistration('2015-09-01')).toMatchObject({ fill: '6', endOfSeriesPossible: true });
+    expect(euroFromFirstRegistration('2016-08-31').endOfSeriesPossible).toBe(true);
+    expect(euroFromFirstRegistration('2016-09-01').endOfSeriesPossible).toBe(false);
+  });
+
+  it('earlier only the minimum is known (an early 5b or 6 changes the tax)', () => {
+    expect(euroFromFirstRegistration('2015-08-31')).toMatchObject({ fill: null, minimum: '5b', minimumFrom: '2013-01-01' });
+    expect(euroFromFirstRegistration('2012-05-10')).toMatchObject({ fill: null, minimum: '5a' });
+    expect(euroFromFirstRegistration('2008-01-31')).toMatchObject({ fill: null, minimum: '4' });
+    expect(euroFromFirstRegistration('1990-01-01')).toMatchObject({ fill: null, minimum: null });
+    expect(euroFromFirstRegistration(null).fill).toBeNull();
   });
 });

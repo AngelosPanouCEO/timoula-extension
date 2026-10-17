@@ -13,7 +13,7 @@ import type { I18nKey } from '../shared/i18n';
 import { loadSettings, type AppSettings } from '../shared/settings';
 import { Banner, LangContext, Toast, useT } from '../shared/ui';
 import { CostsSection } from './CostsSection';
-import { commercialCheck, withCo2From, formFromEntry, initialForm, NO_LTPF, powertrainSuggestionFor, toInputs, toMeta, type FormState } from './form';
+import { commercialCheck, withCo2From, withEuroFromDate, formFromEntry, initialForm, NO_LTPF, powertrainSuggestionFor, toInputs, toMeta, type FormState } from './form';
 import { MarketSection } from './MarketSection';
 import { TaxInputs, TaxResult } from './TaxSection';
 import { VehicleSection, type SetField } from './VehicleSection';
@@ -156,6 +156,8 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       if (markEdited && !next.edited.includes(key)) next.edited = [...next.edited, key];
       if (key === 'powertrain') next.powertrainConfirmed = value !== null;
       if (key === 'ltpfCents') next.ltpf = { ...NO_LTPF, origin: 'manual' };
+      if (key === 'euroClass') next.euroFromDate = false;
+      if (key === 'firstRegistration') return withEuroFromDate(next);
       if (key === 'co2GKm') {
         next.co2FromLtpf = false;
         next.co2ListFrom = null;

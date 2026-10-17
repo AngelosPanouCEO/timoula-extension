@@ -16,6 +16,7 @@ export * from './classify/powertrain';
 export * from './classify/bodyType';
 export * from './classify/vehicleKind';
 export * from './classify/eligibility';
+export * from './classify/euroFromDate';
 export * from './cost/settings';
 export * from './cost/breakdown';
 export * from './market/stats';

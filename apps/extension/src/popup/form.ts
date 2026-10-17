@@ -1,6 +1,6 @@
 /** Popup form state: what the client sees and edits, derived from the listing. */
 import {
-  addDaysIso, checkVehicleKind, type Co2FromPriceList, normalizeCountry, suggestBodyCategory, suggestPowertrain, todayIso, type BodyCategory, type CalculationInputs, type EuroClass,
+  addDaysIso, checkVehicleKind, euroFromFirstRegistration, type Co2FromPriceList, normalizeCountry, suggestBodyCategory, suggestPowertrain, todayIso, type BodyCategory, type CalculationInputs, type EuroClass,
   type Fuel, type Gearbox, type ListingData, type Powertrain, type PowertrainSuggestion,
 } from '@timoula/core';
 import type { FormMeta, HistoryEntry, LtpfChoice } from '../shared/db';
@@ -24,6 +24,8 @@ export interface FormState {
   co2ListFrom: string | null;
   fuel: Fuel | null;
   euroClass: EuroClass | null;
+  /** euroClass was filled from the date of first registration (Euro 6 from 1/9/2015). */
+  euroFromDate: boolean;
   bodyCategory: BodyCategory | null;
   gearbox: Gearbox | null;
   countryCode: string | null;
@@ -69,7 +71,7 @@ export function initialForm(l: ListingData, settings: AppSettings, now = new Dat
     fuel: l.fuel.value,
   };
   const pt = powertrainSuggestionFor(l, base);
-  return {
+  return withEuroFromDate({
     ...base,
     priceCents: nonEur ? null : l.priceCents.value,
     priceNetCents: nonEur ? null : l.priceNetCents.value,
@@ -81,6 +83,7 @@ export function initialForm(l: ListingData, settings: AppSettings, now = new Dat
     co2FromLtpf: false,
     co2ListFrom: null,
     euroClass: l.euroClass.value,
+    euroFromDate: false,
     bodyCategory: suggestBodyCategory(l.bodyTypeRaw.value).category,
     gearbox: l.gearbox.value,
     countryCode: normalizeCountry(l.countryCode.value),
@@ -98,14 +101,14 @@ export function initialForm(l: ListingData, settings: AppSettings, now = new Dat
     pagePricesCents: [],
     notes: '',
     edited: [],
-  };
+  });
 }
 
 /** Restore a previous calculation's inputs but keep today's price and the current listing data. */
 export function formFromEntry(prev: HistoryEntry, current: FormState): FormState {
   const i = prev.inputs;
   const m = prev.meta;
-  return {
+  return withEuroFromDate({
     ...current,
     make: m.make,
     model: m.model,
@@ -123,6 +126,7 @@ export function formFromEntry(prev: HistoryEntry, current: FormState): FormState
     co2FromLtpf: m.co2FromLtpf ?? false,
     co2ListFrom: m.co2ListFrom ?? null,
     euroClass: i.euroClass,
+    euroFromDate: m.euroFromDate ?? false,
     bodyCategory: i.bodyCategory,
     countryCode: i.countryCode,
     powertrain: i.powertrain,
@@ -136,7 +140,7 @@ export function formFromEntry(prev: HistoryEntry, current: FormState): FormState
     pricesText: prev.market?.comparables.filter((c) => c.origin === 'manual').map((c) => String(c.priceCents / 100)).join('\n') ?? '',
     notes: prev.notes,
     edited: m.editedFields,
-  };
+  });
 }
 
 export function toInputs(f: FormState, settings: AppSettings, powertrainUsable: boolean): CalculationInputs {
@@ -174,6 +178,7 @@ export function toMeta(f: FormState): FormMeta {
     ltpf: f.ltpf,
     co2FromLtpf: f.co2FromLtpf,
     co2ListFrom: f.co2ListFrom,
+    euroFromDate: f.euroFromDate,
     editedFields: f.edited,
   };
 }
@@ -186,6 +191,14 @@ export function withCo2From(f: FormState, src: Co2FromPriceList | null): FormSta
   if (f.edited.includes('co2GKm') || (f.co2GKm !== null && !f.co2FromLtpf)) return f;
   if (src) return { ...f, co2GKm: src.co2GKm, co2FromLtpf: true, co2ListFrom: src.sameRecord ? null : src.record.valid_from };
   return f.co2FromLtpf ? { ...f, co2GKm: null, co2FromLtpf: false, co2ListFrom: null } : f;
+}
+
+/** Fill the Euro class from the first registration when the date decides it and none is set. */
+export function withEuroFromDate(f: FormState): FormState {
+  if (f.euroClass !== null && !f.euroFromDate) return f;
+  const fill = euroFromFirstRegistration(f.firstRegistration).fill;
+  if (fill) return { ...f, euroClass: fill, euroFromDate: true };
+  return f.euroFromDate ? { ...f, euroClass: null, euroFromDate: false } : f;
 }
 
 export function commercialCheck(l: ListingData, f: FormState) {

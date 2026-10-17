@@ -1,4 +1,4 @@
-import { BODY_CATEGORIES, COUNTRY_NAMES, EURO_CLASSES, suggestBodyCategory, type Field, type ListingData, type PowertrainSuggestion } from '@timoula/core';
+import { BODY_CATEGORIES, COUNTRY_NAMES, EURO_CLASSES, euroFromFirstRegistration, suggestBodyCategory, type Field, type ListingData, type PowertrainSuggestion } from '@timoula/core';
 import { EuroInput, Labeled, NumberInput, SourceBadge, useT } from '../shared/ui';
 import * as fmt from '../shared/format';
 import type { FormState } from './form';
@@ -18,6 +18,7 @@ export function VehicleSection(props: { listing: ListingData; form: FormState; s
     return <SourceBadge source={field?.source ?? null} />;
   };
   const body = suggestBodyCategory(l.bodyTypeRaw.value);
+  const euro = euroFromFirstRegistration(f.firstRegistration);
   const countryOptions = Object.keys(COUNTRY_NAMES).sort((a, b) => COUNTRY_NAMES[a]![lang].localeCompare(COUNTRY_NAMES[b]![lang], lang));
   const signalsText = props.powertrain.signals.map((s) => `${s.evidence} → ${s.powertrain}`).join(' · ');
 
@@ -89,7 +90,18 @@ export function VehicleSection(props: { listing: ListingData; form: FormState; s
         >
           <NumberInput value={f.co2GKm} onChange={(v) => set('co2GKm', v)} />
         </Labeled>
-        <Labeled label={t('field.euro')} badge={badge('euroClass', l.euroClass)} missing={props.missing.has('euroClass')}>
+        <Labeled
+          label={t('field.euro')}
+          badge={f.euroFromDate ? <SourceBadge source="derived" /> : badge('euroClass', l.euroClass)}
+          missing={props.missing.has('euroClass')}
+          hint={
+            f.euroFromDate
+              ? t(euro.endOfSeriesPossible ? 'field.euro.fromDate.endOfSeries' : 'field.euro.fromDate')
+              : f.euroClass === null && euro.minimum && euro.minimumFrom
+                ? t('field.euro.minimum', { euro: `Euro ${euro.minimum}`, date: fmt.date(lang, euro.minimumFrom) })
+                : null
+          }
+        >
           <select value={f.euroClass ?? ''} onChange={(e) => set('euroClass', (e.currentTarget.value || null) as FormState['euroClass'])}>
             <option value="">{t('option.select')}</option>
             {EURO_CLASSES.map((x) => (

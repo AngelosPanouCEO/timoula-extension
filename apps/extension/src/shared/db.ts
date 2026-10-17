@@ -34,6 +34,8 @@ export interface FormMeta {
   co2FromLtpf?: boolean;
   /** …from the same version in the list of this date (the chosen list prints no CO2). */
   co2ListFrom?: string | null;
+  /** Euro class filled from the date of first registration. */
+  euroFromDate?: boolean;
   /** Field names the client edited by hand. */
   editedFields: string[];
 }
