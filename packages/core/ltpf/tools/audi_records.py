@@ -240,7 +240,7 @@ def main():
                 'file': f['file'], 'sha256': f['sha256'], 'date': date, 'protocol': row.get('page_protocol') or f.get('protocol'),
                 'page': row['page'], 'code': row['code'], 'desc': row['desc'], 'model': model, 'fuel': fuel, 'powertrain': pt,
                 'ltpf': row['ltpf'], 'retail': row.get('retail') if row.get('total_ok') else None, 'vat_ok': row.get('vat_ok'),
-                'cc': row.get('cc'), 'kw': row.get('kw'), 'hp': row.get('hp'), 'co2': row.get('co2'),
+                'cc': row.get('cc'), 'kw': row.get('kw'), 'hp': row.get('hp'), 'co2': row.get('co2') if row.get('co2_second_read_ok') else None,
                 'cycle': co2_cycle_of(date, row.get('co2_header_cycle')), 'pkg': row.get('pkg'), 'my': my_tag(f, row),
                 'power_typo': row.get('power_typo', False),
             })

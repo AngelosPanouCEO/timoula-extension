@@ -79,6 +79,8 @@ const el = {
   'field.hp': 'Ίπποι (PS)',
   'field.co2': 'CO2 (g/km)',
   'field.co2.hint': 'Από το πιστοποιητικό συμμόρφωσης (COC). Για plug-in: η σταθμισμένη τιμή.',
+  'field.co2.fromOtherList':
+    'Η αγγελία δεν έχει CO2 και ο κατάλογος της εποχής δεν το γράφει· μπήκε το CO2 της ίδιας έκδοσης από τον κατάλογο {date}. Το τελωνείο κρίνει από το COC: επιβεβαίωσέ το.',
   'field.co2.fromLtpf': 'Η αγγελία δεν έχει CO2· μπήκε η τιμή του τιμοκαταλόγου για την έκδοση που διάλεξες. Το τελωνείο κρίνει από το COC (ζάντες και εξοπλισμός την αλλάζουν): επιβεβαίωσέ την.',
   'field.co2.cycle': 'Πίνακας {cycle} (με βάση την ημερομηνία πρώτης ταξινόμησης)',
   'field.co2.transition': 'Πρώτη ταξινόμηση 9/2017–12/2020: το τελωνείο χρησιμοποιεί την τιμή NEDC του COC. Οι αγγελίες συχνά δείχνουν WLTP.',
@@ -358,6 +360,7 @@ const en: Record<Key, string> = {
   'field.hp': 'Power (hp)',
   'field.co2': 'CO2 (g/km)',
   'field.co2.hint': 'From the certificate of conformity (COC). Plug-ins: the weighted value.',
+  'field.co2.fromOtherList': 'The listing has no CO2 and the list of the time does not print it; this is the same version’s CO2 from the {date} list. Customs uses the COC: please confirm.',
   'field.co2.fromLtpf': 'The listing has no CO2; this is the price-list value of the version you chose. Customs uses the COC (wheels and equipment change it): please confirm.',
   'field.co2.cycle': '{cycle} table (based on first registration date)',
   'field.co2.transition': 'First registered 9/2017–12/2020: customs uses the NEDC value from the COC. Listings often show WLTP.',

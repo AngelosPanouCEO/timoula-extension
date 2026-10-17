@@ -1,6 +1,6 @@
 /** Popup form state: what the client sees and edits, derived from the listing. */
 import {
-  addDaysIso, checkVehicleKind, type LtpfRecord, normalizeCountry, suggestBodyCategory, suggestPowertrain, todayIso, type BodyCategory, type CalculationInputs, type EuroClass,
+  addDaysIso, checkVehicleKind, type Co2FromPriceList, normalizeCountry, suggestBodyCategory, suggestPowertrain, todayIso, type BodyCategory, type CalculationInputs, type EuroClass,
   type Fuel, type Gearbox, type ListingData, type Powertrain, type PowertrainSuggestion,
 } from '@timoula/core';
 import type { FormMeta, HistoryEntry, LtpfChoice } from '../shared/db';
@@ -20,6 +20,8 @@ export interface FormState {
   co2GKm: number | null;
   /** co2GKm was copied from the chosen price-list version; the client should confirm it from the COC. */
   co2FromLtpf: boolean;
+  /** Date of the other list the CO2 came from, when the chosen version's list prints none. */
+  co2ListFrom: string | null;
   fuel: Fuel | null;
   euroClass: EuroClass | null;
   bodyCategory: BodyCategory | null;
@@ -77,6 +79,7 @@ export function initialForm(l: ListingData, settings: AppSettings, now = new Dat
     powerHp: l.powerHp.value,
     co2GKm: l.co2GKm.value,
     co2FromLtpf: false,
+    co2ListFrom: null,
     euroClass: l.euroClass.value,
     bodyCategory: suggestBodyCategory(l.bodyTypeRaw.value).category,
     gearbox: l.gearbox.value,
@@ -118,6 +121,7 @@ export function formFromEntry(prev: HistoryEntry, current: FormState): FormState
     mileageKm: current.mileageKm ?? i.mileageKm,
     co2GKm: i.co2GKm,
     co2FromLtpf: m.co2FromLtpf ?? false,
+    co2ListFrom: m.co2ListFrom ?? null,
     euroClass: i.euroClass,
     bodyCategory: i.bodyCategory,
     countryCode: i.countryCode,
@@ -169,29 +173,19 @@ export function toMeta(f: FormState): FormMeta {
     commercialOverride: f.commercialOverride,
     ltpf: f.ltpf,
     co2FromLtpf: f.co2FromLtpf,
+    co2ListFrom: f.co2ListFrom,
     editedFields: f.edited,
   };
 }
 
 /**
- * CO2 of a price-list version, usable when the listing shows none. Skipped when the list states a
- * cycle other than the one customs applies to this car (NEDC up to 31/12/2020, WLTP after).
+ * Choosing a price-list version: fill CO2 from it when the listing had none (or it came from a
+ * version before). Never from a sister version (criterion β): its engine differs.
  */
-export function co2FromRecord(r: LtpfRecord, firstRegistration: string | null): number | null {
-  if (r.co2_g_km === null) return null;
-  if (r.co2_cycle && firstRegistration) {
-    const cycle = firstRegistration <= '2020-12-31' ? 'NEDC' : 'WLTP';
-    if (r.co2_cycle !== cycle) return null;
-  }
-  return r.co2_g_km;
-}
-
-/** Choosing a price-list version: fill CO2 from it when the listing had none (or it came from a version before). */
-export function withCo2From(f: FormState, r: LtpfRecord | null): FormState {
+export function withCo2From(f: FormState, src: Co2FromPriceList | null): FormState {
   if (f.edited.includes('co2GKm') || (f.co2GKm !== null && !f.co2FromLtpf)) return f;
-  const co2 = r ? co2FromRecord(r, f.firstRegistration) : null;
-  if (co2 !== null) return { ...f, co2GKm: co2, co2FromLtpf: true };
-  return f.co2FromLtpf ? { ...f, co2GKm: null, co2FromLtpf: false } : f;
+  if (src) return { ...f, co2GKm: src.co2GKm, co2FromLtpf: true, co2ListFrom: src.sameRecord ? null : src.record.valid_from };
+  return f.co2FromLtpf ? { ...f, co2GKm: null, co2FromLtpf: false, co2ListFrom: null } : f;
 }
 
 export function commercialCheck(l: ListingData, f: FormState) {

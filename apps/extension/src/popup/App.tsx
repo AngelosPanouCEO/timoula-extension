@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   buildCarGrUrl, buildComparison, checkEligibility, COUNTRY_NAMES, lookupLtpf, PRODUCT, runCalculation, todayIso, verdict,
-  type Comparable, type ExtractionResult, type ListingData, type LtpfCandidate, type LtpfRecord, type MarketQuery,
+  type Comparable, type ExtractionResult, type ListingData, type LtpfCandidate, type LtpfRecord, type MarketQuery, co2FromPriceList,
 } from '@timoula/core';
 import { matchSite } from '../extract/sites';
 import { activeTab, extractFromTab, openPage, openTab } from '../shared/chromeApi';
@@ -156,7 +156,10 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       if (markEdited && !next.edited.includes(key)) next.edited = [...next.edited, key];
       if (key === 'powertrain') next.powertrainConfirmed = value !== null;
       if (key === 'ltpfCents') next.ltpf = { ...NO_LTPF, origin: 'manual' };
-      if (key === 'co2GKm') next.co2FromLtpf = false;
+      if (key === 'co2GKm') {
+        next.co2FromLtpf = false;
+        next.co2ListFrom = null;
+      }
       return next;
     });
   };
@@ -183,7 +186,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
 
   const useCandidate = (c: LtpfCandidate, markEdited: boolean) =>
     setForm((f) => ({
-      ...withCo2From(f, c.record),
+      ...withCo2From(f, c.criterion === 'beta' ? null : co2FromPriceList(records ?? [], c.record, f.firstRegistration)),
       ltpfCents: Math.round(c.record.ltpf_eur * 100),
       ltpf: {
         origin: 'table',

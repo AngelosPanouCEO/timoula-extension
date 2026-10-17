@@ -1,5 +1,6 @@
 import { BODY_CATEGORIES, COUNTRY_NAMES, EURO_CLASSES, suggestBodyCategory, type Field, type ListingData, type PowertrainSuggestion } from '@timoula/core';
 import { EuroInput, Labeled, NumberInput, SourceBadge, useT } from '../shared/ui';
+import * as fmt from '../shared/format';
 import type { FormState } from './form';
 
 export type SetField = <K extends keyof FormState>(key: K, value: FormState[K], markEdited?: boolean) => void;
@@ -78,7 +79,13 @@ export function VehicleSection(props: { listing: ListingData; form: FormState; s
           label={t('field.co2')}
           badge={f.co2FromLtpf ? <span class="badge">{t('source.ltpf')}</span> : badge('co2GKm', l.co2GKm)}
           missing={props.missing.has('co2')}
-          hint={f.co2FromLtpf ? t('field.co2.fromLtpf') : t('field.co2.hint')}
+          hint={
+            f.co2FromLtpf
+              ? f.co2ListFrom
+                ? t('field.co2.fromOtherList', { date: fmt.date(lang, f.co2ListFrom) })
+                : t('field.co2.fromLtpf')
+              : t('field.co2.hint')
+          }
         >
           <NumberInput value={f.co2GKm} onChange={(v) => set('co2GKm', v)} />
         </Labeled>

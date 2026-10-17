@@ -102,7 +102,9 @@ def parse_row(line):
         return None
     rest = cells[ci + 2:]
     nums, triple, pkg, circ, note = [], None, None, None, None
+    last_euro_prefix = False
     for c in rest:
+        last_euro_prefix = False
         c2 = c.replace('€', '').strip()
         if re.fullmatch(r'[EΕ]\d{2}(?:/[EΕ]\d{2})*', c2):
             pkg = c2
@@ -122,6 +124,7 @@ def parse_row(line):
         if parts and all(NUM_RE.match(p) for p in parts):
             for p in parts:
                 nums.append(('n', num(p)))
+            last_euro_prefix = c.startswith('€') and len(parts) == 1
             continue
         if c2 in ('-', ''):
             nums.append(('n', 0))
@@ -130,12 +133,17 @@ def parse_row(line):
             note = c2  # "ΝΕΑ ΕΚΔΟΣΗ", "Νέα έκδοση" after the price
             continue
         return None  # unexpected cell: not a clean row
+    # 12/2022–07/2023 print the circulation tax as "€ 79" in the last column (not "79 €").
+    if last_euro_prefix and len(nums) >= 2 and nums[-1][0] == 'n' and nums[-2][0] == 'n' and nums[-1][1] < 2000:
+        nums[-1] = ('circ', nums[-1][1])
+        circ = nums[-1][1]
     values = [v for k, v in nums]
     kinds = [k for k, v in nums]
     return {'code': code, 'variant': variant, 'desc': desc, 'values': values, 'kinds': kinds, 'triple': triple, 'pkg': pkg, 'circ': circ, 'note': note}
 
 
-def interpret(row):
+def interpret(row, co2_column=False):
+    """co2_column: the page header has a CO2 column (lists that print it without the circulation tax, e.g. 2015)."""
     v, kinds = row['values'], row['kinds']
     out = {'ltpf': None, 'vat': None, 'vat_rate': None, 'reg_tax': None, 'retail': None, 'vat_ok': False, 'total_ok': False,
            'hp': None, 'kw': None, 'cc': None, 'co2': None}
@@ -164,6 +172,8 @@ def interpret(row):
                             k = tk.index('circ')
                             if k >= 1 and 20 <= tail[k - 1] <= 600:
                                 out['co2'] = tail[k - 1]
+                        elif co2_column and tail and 20 <= tail[-1] <= 600:
+                            out['co2'] = tail[-1]  # CO2 is the last column
                         break
                     acc += v[j]
                 before = v[:i]
@@ -213,7 +223,7 @@ def parse_pdf(path):
             r = parse_row(line)
             if not r:
                 continue
-            x = interpret(r)
+            x = interpret(r, co2_column='CO2' in header)
             if x['ltpf'] is None:
                 continue
             rows.append({**r, **x, 'page': pno, 'page_valid_from': vf, 'page_protocol': pr, 'my': my, 'co2_header_cycle': cycle})

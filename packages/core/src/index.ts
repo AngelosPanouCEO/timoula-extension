@@ -11,6 +11,7 @@ export * from './ltpf/schema';
 export * from './ltpf/lookup';
 export * from './ltpf/csv';
 export * from './ltpf/bundled';
+export * from './ltpf/co2';
 export * from './classify/powertrain';
 export * from './classify/bodyType';
 export * from './classify/vehicleKind';

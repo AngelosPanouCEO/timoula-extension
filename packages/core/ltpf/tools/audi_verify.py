@@ -6,7 +6,8 @@ Usage: python3 -I audi_verify.py <dir with the PDFs> <parsed.json>   (updates pa
 
 audi_parse.py reads the lists with poppler (pdftotext). This script reads the same pages
 with pdfplumber (pdfminer, a different PDF text engine), finds the line that holds the model
-code and checks that the same ΛΤΠΦ is printed on it. Rows that pass get "second_read_ok".
+code and checks that the same ΛΤΠΦ is printed on it. Rows that pass get "second_read_ok"; a CO2
+read by audi_parse.py is checked the same way ("co2_second_read_ok").
 """
 import json
 import os
@@ -42,14 +43,15 @@ def verify_file(args):
             words = words_of(pdf.pages[pno - 1])
             for i in idxs:
                 r = rows[i]
-                found = False
+                found, co2_found = False, False
                 for anchor in (w for w in words if w['text'].rstrip('.') == r['code']):
                     ln = same_line(words, anchor)
                     values = [num(t.replace('€', '')) for t in ln if NUM_RE.match(t.replace('€', ''))]
                     if any(abs(v - r['ltpf']) < 0.005 for v in values):
                         found = True
+                        co2_found = bool(r.get('co2')) and r['co2'] in values
                         break
-                result[i] = found
+                result[i] = (found, co2_found)
     return f['file'], result
 
 
@@ -61,9 +63,11 @@ def main():
     with Pool(processes=os.cpu_count() or 2) as pool:
         for name, result in pool.imap_unordered(verify_file, jobs):
             f = by_name[name]
-            for i, ok in result.items():
+            for i, (ok, co2_ok) in result.items():
                 f['rows'][i]['second_read_ok'] = ok
-            print(f"{name}: second read {sum(result.values())}/{len(result)}", flush=True)
+                f['rows'][i]['co2_second_read_ok'] = co2_ok
+            n_co2 = sum(1 for r in f['rows'] if r.get('co2'))
+            print(f"{name}: second read {sum(ok for ok, _ in result.values())}/{len(result)}, CO2 {sum(c for _, c in result.values())}/{n_co2}", flush=True)
     json.dump(data, open(parsed_path, 'w', encoding='utf-8'), ensure_ascii=False)
 
 

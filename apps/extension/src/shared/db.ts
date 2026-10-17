@@ -32,6 +32,8 @@ export interface FormMeta {
   ltpf: LtpfChoice;
   /** CO2 was copied from the chosen price-list version (the listing had none). */
   co2FromLtpf?: boolean;
+  /** …from the same version in the list of this date (the chosen list prints no CO2). */
+  co2ListFrom?: string | null;
   /** Field names the client edited by hand. */
   editedFields: string[];
 }
