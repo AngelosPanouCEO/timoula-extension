@@ -128,15 +128,25 @@ if (!live) {
   check('03 mild hybrid needs confirmation', t.includes('Ήπιο υβριδικό') && t.includes('Επιβεβαιώνω τον τύπο κινητήρα'));
 }
 
+// 04: brand without Greek price lists → ΛΤΠΦ and CO2 estimates, the calculation still runs
+{
+  const { popup } = await openPopupFor(byName('04'), '04-estimates');
+  await popup.waitForTimeout(500);
+  const t = await text(popup);
+  const ltpf = await popup.inputValue('label:has-text("ΛΤΠΦ") input');
+  check('04 Mercedes C 200 (no Greek list): ΛΤΠΦ estimated, never empty', Number(ltpf) > 10000 && t.includes('Εκτίμηση'), `ΛΤΠΦ ${ltpf}`);
+  await popup.screenshot({ path: join(shots, '04-estimates.png'), fullPage: true });
+}
+
 // 19: Audi archive → official ΛΤΠΦ after choosing the version
 {
   const { popup } = await openPopupFor(byName('19'), '19-audi');
   const t = await text(popup);
   check('19 Audi A3 1.6 TDI 03/2018 offers the 1.6 TDI S tronic versions of the 20/02/2018 list', /Ταιριάζουν \d+ εκδόσεις/.test(t) && t.includes('Sportback 1.6 TDI Design S tronic') && t.includes('21.723,00'));
-  await popup.click('.candidate:has-text("Sportback 1.6 TDI Design S tronic") button');
   await popup.waitForTimeout(300);
   const t2 = await text(popup);
-  check('19 after choosing Sportback Design: official ΛΤΠΦ 21.723,00 €', t2.includes('Επίσημη τιμή') && t2.includes('21.723,00'));
+  const picked = await popup.locator('.candidate.selected:has-text("Sportback 1.6 TDI Design S tronic")').count();
+  check('19 the most likely version (Sportback Design) is used automatically: official ΛΤΠΦ 21.723,00 €', picked === 1 && t2.includes('Επίσημη τιμή') && t2.includes('21.723,00') && t2.includes('Μπήκε η πιο πιθανή'));
   const co2 = await popup.inputValue('label:has-text("CO2 (g/km)") input');
   check('19 listing has no CO2: 106 g/km from the price list, marked to confirm, tax calculated', co2 === '106' && t2.includes('από τον τιμοκατάλογο') && /Τέλος ταξινόμησης\s+[\d.,]+\s€/.test(t2), `CO2 ${co2}`);
   await popup.screenshot({ path: join(shots, '19-audi.png'), fullPage: true });

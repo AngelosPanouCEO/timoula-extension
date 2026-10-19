@@ -25,13 +25,15 @@ function CandidateRow(props: { c: LtpfCandidate; selected: boolean; onUse: () =>
     <div class={`candidate ${props.selected ? 'selected' : ''}`}>
       <div class="meta">
         <div>
-          <strong>
-            {r.model} {r.version}
-          </strong>{' '}
+          <strong>{props.c.criterion === 'residual' ? t('ltpf.criterion.residual') : `${r.model} ${r.version}`}</strong>{' '}
           {r.engine_label ?? ''} {r.transmission ?? ''} {r.model_year_tag ? `(${r.model_year_tag})` : ''}
         </div>
         <div class="small muted">
-          {listLabel(t, lang, r.valid_from, r.valid_to)} ·{' '}
+          {props.c.criterion === 'residual'
+            ? `${r.notes ?? ''} · `
+            : props.c.criterion === 'epsilon'
+              ? `${r.list_label ?? ''} · ${r.notes ?? ''} · `
+              : `${listLabel(t, lang, r.valid_from, r.valid_to)} · `}
           {t('ltpf.checks', {
             displacement: mark(props.c.checks.displacement),
             power: mark(props.c.checks.power),
@@ -79,15 +81,14 @@ export function TaxInputs(props: { form: FormState; set: SetField; lookup: LtpfL
       </div>
       {f.ltpf.origin === 'table' && f.ltpf.recordId ? (
         <p class="small muted" style={{ margin: '4px 0 0' }}>
-          {f.ltpf.label} · {listLabel(t, lang, f.ltpf.listFrom, f.ltpf.listTo)}
-          {criterionText ? ` · ${criterionText}` : ''}
+          {[f.ltpf.label, listLabel(t, lang, f.ltpf.listFrom, f.ltpf.listTo), criterionText].filter(Boolean).join(' · ')}
         </p>
       ) : null}
       {noneText && f.ltpfCents === null ? <p class="small muted">{noneText}</p> : null}
       {lookup && lookup.candidates.length > 1 ? (
         <div>
           <p class="small" style={{ margin: '6px 0 0' }}>
-            {t(lookup.status === 'single' ? 'ltpf.autoPicked' : 'ltpf.choose', { n: lookup.candidates.length })}
+            {t(lookup.status === 'single' ? 'ltpf.autoPicked' : f.edited.includes('ltpf') ? 'ltpf.choose' : 'ltpf.autoPickedTop', { n: lookup.candidates.length })}
             {lookup.criterion && lookup.criterion !== 'exact' ? <span class="muted"> ({t(`ltpf.criterion.${lookup.criterion}`)})</span> : null}
           </p>
           <div class="candidates">

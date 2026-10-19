@@ -78,10 +78,20 @@ export function VehicleSection(props: { listing: ListingData; form: FormState; s
         </Labeled>
         <Labeled
           label={t('field.co2')}
-          badge={f.co2FromLtpf ? <span class="badge">{t('source.ltpf')}</span> : badge('co2GKm', l.co2GKm)}
+          badge={
+            f.co2FromLtpf ? (
+              <span class="badge">{t('source.ltpf')}</span>
+            ) : f.co2FromEea ? (
+              <span class="badge estimate">{t('source.eea')}</span>
+            ) : (
+              badge('co2GKm', l.co2GKm)
+            )
+          }
           missing={props.missing.has('co2')}
           hint={
-            f.co2FromLtpf
+            f.co2FromEea
+              ? t('field.co2.fromEea', { cars: f.co2FromEea.cars.toLocaleString(lang === 'el' ? 'el-GR' : 'en-GB'), level: t(`co2.level.${f.co2FromEea.level}`) })
+              : f.co2FromLtpf
               ? f.co2ListFrom
                 ? t('field.co2.fromOtherList', { date: fmt.date(lang, f.co2ListFrom) })
                 : t('field.co2.fromLtpf')

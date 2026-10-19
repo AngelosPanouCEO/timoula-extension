@@ -4,7 +4,7 @@
  */
 import { mergeListingEntries } from './historyMerge';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import { PRODUCT, type CalculationInputs, type CostBreakdown, type ListingData, type LtpfCriterion, type LtpfRecord, type MarketComparison, type RegistrationTaxBreakdown, type Verdict } from '@timoula/core';
+import { PRODUCT, type EeaCo2Level, type CalculationInputs, type CostBreakdown, type ListingData, type LtpfCriterion, type LtpfRecord, type MarketComparison, type RegistrationTaxBreakdown, type Verdict } from '@timoula/core';
 
 export interface LtpfChoice {
   /** How the ΛΤΠΦ value was obtained. */
@@ -34,6 +34,8 @@ export interface FormMeta {
   co2FromLtpf?: boolean;
   /** …from the same version in the list of this date (the chosen list prints no CO2). */
   co2ListFrom?: string | null;
+  /** CO2 estimated from the EEA registrations data. */
+  co2FromEea?: { level: EeaCo2Level; cars: number } | null;
   /** Euro class filled from the date of first registration. */
   euroFromDate?: boolean;
   /** Field names the client edited by hand. */

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { co2FromPriceList, type LtpfRecord } from '@timoula/core';
-import { withCo2From, type FormState } from '../src/popup/form';
+import { withCo2Estimate, type FormState } from '../src/popup/form';
+
+const withCo2From = (f: FormState, list: ReturnType<typeof co2FromPriceList>) => withCo2Estimate(f, list, null);
 
 const rec = (patch: Partial<LtpfRecord>) =>
   ({ brand: 'AUDI', model: 'R8', version: '4.2 FSI quattro R tronic', transmission: 'AMT', power_ps: 420, power_kw: null, co2_g_km: 106, co2_cycle: 'NEDC', valid_from: '2018-02-20', ...patch }) as LtpfRecord;
-const form = (patch: Partial<FormState>) => ({ co2GKm: null, co2FromLtpf: false, co2ListFrom: null, firstRegistration: '2018-03-31', edited: [], ...patch }) as unknown as FormState;
+const form = (patch: Partial<FormState>) => ({ co2GKm: null, co2FromLtpf: false, co2ListFrom: null, co2FromEea: null, firstRegistration: '2018-03-31', edited: [], ...patch }) as unknown as FormState;
 const src = (r: LtpfRecord, all: LtpfRecord[] = [r], firstReg = '2018-03-31') => co2FromPriceList(all, r, firstReg);
 
 describe('CO2 from the chosen price-list version', () => {
@@ -43,5 +45,16 @@ describe('CO2 from the chosen price-list version', () => {
     expect(s).toMatchObject({ co2GKm: 332, sameRecord: false });
     expect(withCo2From(form({ firstRegistration: '2008-01-31' }), s)).toMatchObject({ co2GKm: 332, co2FromLtpf: true, co2ListFrom: '2011-07-11' });
     expect(src(chosen, [chosen, rec({ co2_g_km: 330, valid_from: '2013-07-11' })], '2008-01-31')).toBeNull(); // > 4 years
+  });
+
+  it('EEA estimate when no price list value; the price list wins when it has one; typed values stay', () => {
+    const eea = { co2GKm: 172, cycle: 'NEDC' as const, level: 'model' as const, cars: 1558 };
+    const a = withCo2Estimate(form({}), null, eea);
+    expect(a).toMatchObject({ co2GKm: 172, co2FromEea: { level: 'model', cars: 1558 }, co2FromLtpf: false });
+    expect(withCo2Estimate(a, src(rec({})), eea)).toMatchObject({ co2GKm: 106, co2FromLtpf: true, co2FromEea: null });
+    expect(withCo2Estimate(a, null, null)).toMatchObject({ co2GKm: null, co2FromEea: null });
+    expect(withCo2Estimate(form({ co2GKm: 150 }), null, eea)).toMatchObject({ co2GKm: 150, co2FromEea: null });
+    const same = withCo2Estimate(a, null, eea);
+    expect(same).toBe(a); // unchanged → same object (runs in an effect)
   });
 });

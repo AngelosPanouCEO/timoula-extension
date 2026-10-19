@@ -1,6 +1,6 @@
 /** Popup form state: what the client sees and edits, derived from the listing. */
 import {
-  addDaysIso, checkVehicleKind, euroFromFirstRegistration, type Co2FromPriceList, normalizeCountry, suggestBodyCategory, suggestPowertrain, todayIso, type BodyCategory, type CalculationInputs, type EuroClass,
+  addDaysIso, checkVehicleKind, euroFromFirstRegistration, type Co2FromPriceList, type EeaCo2Estimate, type EeaCo2Level, normalizeCountry, suggestBodyCategory, suggestPowertrain, todayIso, type BodyCategory, type CalculationInputs, type EuroClass,
   type Fuel, type Gearbox, type ListingData, type Powertrain, type PowertrainSuggestion,
 } from '@timoula/core';
 import type { FormMeta, HistoryEntry, LtpfChoice } from '../shared/db';
@@ -22,6 +22,8 @@ export interface FormState {
   co2FromLtpf: boolean;
   /** Date of the other list the CO2 came from, when the chosen version's list prints none. */
   co2ListFrom: string | null;
+  /** co2GKm is an estimate from the EEA registrations data (no listing or price-list value). */
+  co2FromEea: { level: EeaCo2Level; cars: number } | null;
   fuel: Fuel | null;
   euroClass: EuroClass | null;
   /** euroClass was filled from the date of first registration (Euro 6 from 1/9/2015). */
@@ -82,6 +84,7 @@ export function initialForm(l: ListingData, settings: AppSettings, now = new Dat
     co2GKm: l.co2GKm.value,
     co2FromLtpf: false,
     co2ListFrom: null,
+    co2FromEea: null,
     euroClass: l.euroClass.value,
     euroFromDate: false,
     bodyCategory: suggestBodyCategory(l.bodyTypeRaw.value).category,
@@ -125,6 +128,7 @@ export function formFromEntry(prev: HistoryEntry, current: FormState): FormState
     co2GKm: i.co2GKm,
     co2FromLtpf: m.co2FromLtpf ?? false,
     co2ListFrom: m.co2ListFrom ?? null,
+    co2FromEea: m.co2FromEea ?? null,
     euroClass: i.euroClass,
     euroFromDate: m.euroFromDate ?? false,
     bodyCategory: i.bodyCategory,
@@ -143,7 +147,18 @@ export function formFromEntry(prev: HistoryEntry, current: FormState): FormState
   });
 }
 
-export function toInputs(f: FormState, settings: AppSettings, powertrainUsable: boolean): CalculationInputs {
+/**
+ * Powertrain for the calculation. Until the client confirms it, a provisional one is used so the
+ * tax can still be estimated: an unconfirmed mild hybrid counts as conventional (no exemption,
+ * the higher tax); other suggestions (plug-in, hybrid, electric) are used as suggested.
+ */
+export function calculationPowertrain(f: Pick<FormState, 'powertrain' | 'powertrainConfirmed'>): { powertrain: Powertrain; provisional: boolean } {
+  if (f.powertrain && f.powertrainConfirmed) return { powertrain: f.powertrain, provisional: false };
+  const p = f.powertrain ?? 'ICE';
+  return { powertrain: p === 'MHEV' ? 'ICE' : p, provisional: true };
+}
+
+export function toInputs(f: FormState, settings: AppSettings, powertrain: Powertrain | null): CalculationInputs {
   return {
     priceBasis: settings.costs.priceBasis,
     priceCents: f.priceCents,
@@ -156,7 +171,7 @@ export function toInputs(f: FormState, settings: AppSettings, powertrainUsable: 
     bodyCategory: f.bodyCategory,
     co2GKm: f.co2GKm,
     euroClass: f.euroClass,
-    powertrain: powertrainUsable ? f.powertrain : null,
+    powertrain,
     mhevCountsAsHybrid: f.mhevCountsAsHybrid,
     countryCode: f.countryCode,
     applyNewMeansOfTransportVat: f.applyNmtVat,
@@ -178,19 +193,28 @@ export function toMeta(f: FormState): FormMeta {
     ltpf: f.ltpf,
     co2FromLtpf: f.co2FromLtpf,
     co2ListFrom: f.co2ListFrom,
+    co2FromEea: f.co2FromEea,
     euroFromDate: f.euroFromDate,
     editedFields: f.edited,
   };
 }
 
 /**
- * Choosing a price-list version: fill CO2 from it when the listing had none (or it came from a
- * version before). Never from a sister version (criterion β): its engine differs.
+ * CO2 when the listing shows none: from the chosen price-list version (or the same version in a
+ * nearby list), else the EEA estimate. Never replaces a listing or typed value; follows the inputs.
+ * Returns the same object when nothing changes (it runs in an effect).
  */
-export function withCo2From(f: FormState, src: Co2FromPriceList | null): FormState {
-  if (f.edited.includes('co2GKm') || (f.co2GKm !== null && !f.co2FromLtpf)) return f;
-  if (src) return { ...f, co2GKm: src.co2GKm, co2FromLtpf: true, co2ListFrom: src.sameRecord ? null : src.record.valid_from };
-  return f.co2FromLtpf ? { ...f, co2GKm: null, co2FromLtpf: false, co2ListFrom: null } : f;
+export function withCo2Estimate(f: FormState, list: Co2FromPriceList | null, eea: EeaCo2Estimate | null): FormState {
+  const estimated = f.co2FromLtpf || f.co2FromEea !== null;
+  if (f.edited.includes('co2GKm') || (f.co2GKm !== null && !estimated)) return f;
+  let next: Pick<FormState, 'co2GKm' | 'co2FromLtpf' | 'co2ListFrom' | 'co2FromEea'>;
+  if (list) next = { co2GKm: list.co2GKm, co2FromLtpf: true, co2ListFrom: list.sameRecord ? null : list.record.valid_from, co2FromEea: null };
+  else if (eea) next = { co2GKm: eea.co2GKm, co2FromLtpf: false, co2ListFrom: null, co2FromEea: { level: eea.level, cars: eea.cars } };
+  else next = { co2GKm: estimated ? null : f.co2GKm, co2FromLtpf: false, co2ListFrom: null, co2FromEea: null };
+  const same =
+    next.co2GKm === f.co2GKm && next.co2FromLtpf === f.co2FromLtpf && next.co2ListFrom === f.co2ListFrom &&
+    next.co2FromEea?.level === f.co2FromEea?.level && next.co2FromEea?.cars === f.co2FromEea?.cars;
+  return same ? f : { ...f, ...next };
 }
 
 /** Fill the Euro class from the first registration when the date decides it and none is set. */

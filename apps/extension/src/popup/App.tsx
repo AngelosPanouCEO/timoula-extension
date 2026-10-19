@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   buildCarGrUrl, buildComparison, checkEligibility, COUNTRY_NAMES, lookupLtpf, PRODUCT, runCalculation, todayIso, verdict,
-  type Comparable, type ExtractionResult, type ListingData, type LtpfCandidate, type LtpfRecord, type MarketQuery, co2FromPriceList,
+  type Comparable, type ExtractionResult, type ListingData, type LtpfCandidate, type LtpfRecord, type MarketQuery, co2FromPriceList, dePriceCandidates, estimateCo2FromEea, loadDePriceTable,
+  loadEeaCo2Table, lookupLtpfWithEstimates, residualLtpfRecord, type DePriceTable, type EeaCo2Table,
 } from '@timoula/core';
 import { matchSite } from '../extract/sites';
 import { activeTab, extractFromTab, openPage, openTab } from '../shared/chromeApi';
@@ -13,7 +14,7 @@ import type { I18nKey } from '../shared/i18n';
 import { loadSettings, type AppSettings } from '../shared/settings';
 import { Banner, LangContext, Toast, useT } from '../shared/ui';
 import { CostsSection } from './CostsSection';
-import { commercialCheck, withCo2From, withEuroFromDate, formFromEntry, initialForm, NO_LTPF, powertrainSuggestionFor, toInputs, toMeta, type FormState } from './form';
+import { calculationPowertrain, commercialCheck, withCo2Estimate, withEuroFromDate, formFromEntry, initialForm, NO_LTPF, powertrainSuggestionFor, toInputs, toMeta, type FormState } from './form';
 import { MarketSection } from './MarketSection';
 import { TaxInputs, TaxResult } from './TaxSection';
 import { VehicleSection, type SetField } from './VehicleSection';
@@ -124,6 +125,8 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
   const today = todayIso();
   const [form, setForm] = useState<FormState>(() => initialForm(listing, settings));
   const [records, setRecords] = useState<LtpfRecord[] | null>(null);
+  const [eea, setEea] = useState<EeaCo2Table | null>(null);
+  const [dePrices, setDePrices] = useState<DePriceTable | null>(null);
   const [previous, setPrevious] = useState<HistoryEntry | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -136,6 +139,8 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
 
   useEffect(() => {
     void ltpfRecords().then(setRecords);
+    void loadEeaCo2Table().then(setEea).catch(() => setEea(null));
+    void loadDePriceTable().then(setDePrices).catch(() => setDePrices(null));
     void entryForListing(listingKey)
       .then((prev) => {
         if (prev) {
@@ -161,6 +166,7 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       if (key === 'co2GKm') {
         next.co2FromLtpf = false;
         next.co2ListFrom = null;
+        next.co2FromEea = null;
       }
       return next;
     });
@@ -168,9 +174,10 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
 
   const ptSuggestion = useMemo(() => powertrainSuggestionFor(listing, form), [listing, form.fuel, form.make, form.model, form.version, form.firstRegistration]);
 
+  const co2Estimated = form.co2FromLtpf || form.co2FromEea !== null;
   const lookup = useMemo(() => {
     if (!records) return null;
-    return lookupLtpf(records, {
+    const q = {
       make: form.make,
       model: form.model,
       versionText: [form.version, listing.title.value].filter(Boolean).join(' '),
@@ -178,45 +185,85 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       displacementCc: form.displacementCc,
       powerKw: form.powerKw,
       powerHp: form.powerHp,
-      // A CO2 copied from a price-list version must not narrow the search for versions.
-      co2GKm: form.co2FromLtpf ? null : form.co2GKm,
+      // An estimated CO2 must not narrow the search for versions.
+      co2GKm: co2Estimated ? null : form.co2GKm,
       fuel: form.fuel,
       powertrain: form.powertrain,
       gearbox: form.gearbox,
+    };
+    const residual = residualLtpfRecord(rules, q, {
+      priceCents: form.priceCents,
+      countryCode: form.countryCode,
+      firstRegistration: form.firstRegistration,
+      expectedRegistration: form.expectedRegistration,
+      mileageKm: form.mileageKm,
+      bodyCategory: form.bodyCategory,
     });
-  }, [records, form.make, form.model, form.version, form.firstRegistration, form.displacementCc, form.powerKw, form.powerHp, form.co2GKm, form.co2FromLtpf, form.fuel, form.powertrain, form.gearbox]);
+    return lookupLtpfWithEstimates(records, q, { foreign: dePrices ? dePriceCandidates(dePrices, q) : [], residual });
+  }, [records, dePrices, form.make, form.model, form.version, form.firstRegistration, form.displacementCc, form.powerKw, form.powerHp, form.co2GKm, co2Estimated, form.fuel, form.powertrain, form.gearbox, form.priceCents, form.countryCode, form.expectedRegistration, form.mileageKm, form.bodyCategory]);
 
   const useCandidate = (c: LtpfCandidate, markEdited: boolean) =>
     setForm((f) => ({
-      ...withCo2From(f, c.criterion === 'beta' ? null : co2FromPriceList(records ?? [], c.record, f.firstRegistration)),
+      ...f,
       ltpfCents: Math.round(c.record.ltpf_eur * 100),
       ltpf: {
         origin: 'table',
         recordId: c.record.id,
         criterion: c.criterion,
         official: c.official,
-        label: `${c.record.brand} ${c.record.model} ${c.record.version} ${c.record.engine_label ?? ''} ${c.record.transmission ?? ''}`.replace(/\s+/g, ' ').trim(),
-        listFrom: c.record.valid_from,
-        listTo: c.record.valid_to,
+        label:
+          c.criterion === 'residual'
+            ? (c.record.notes ?? '')
+            : `${c.record.brand} ${c.record.model} ${c.record.version} ${c.record.engine_label ?? ''} ${c.record.transmission ?? ''}${c.criterion === 'epsilon' ? ` · ${c.record.list_label ?? ''}` : ''}`.replace(/\s+/g, ' ').trim(),
+        // Only Greek price lists have a validity window worth showing.
+        listFrom: c.criterion === 'epsilon' || c.criterion === 'residual' ? null : c.record.valid_from,
+        listTo: c.criterion === 'epsilon' || c.criterion === 'residual' ? null : c.record.valid_to,
       },
       edited: markEdited && !f.edited.includes('ltpf') ? [...f.edited, 'ltpf'] : f.edited,
     }));
 
-  // Keep the ΛΤΠΦ in sync with the lookup unless the client typed or picked one.
+  // Keep the ΛΤΠΦ in sync with the lookup unless the client typed or picked one. Several matches:
+  // the most likely is used so the calculation never stops; the client can pick another.
   useEffect(() => {
     if (!lookup || form.ltpf.origin === 'manual' || form.edited.includes('ltpf')) return;
-    if (lookup.selected) {
-      if (form.ltpf.recordId !== lookup.selected.record.id || form.ltpf.official !== lookup.selected.official) useCandidate(lookup.selected, false);
-    } else if (form.ltpf.recordId && !lookup.candidates.some((c) => c.record.id === form.ltpf.recordId)) {
-      setForm((f) => ({ ...withCo2From(f, null), ltpfCents: null, ltpf: NO_LTPF }));
+    const pick = lookup.selected ?? lookup.candidates[0] ?? null;
+    if (pick) {
+      const cents = Math.round(pick.record.ltpf_eur * 100);
+      const stillListed = lookup.candidates.find((c) => c.record.id === form.ltpf.recordId);
+      if (stillListed && !lookup.selected && Math.round(stillListed.record.ltpf_eur * 100) === form.ltpfCents) return; // keep the client's earlier pick
+      if (form.ltpf.recordId !== pick.record.id || form.ltpf.official !== pick.official || form.ltpfCents !== cents) useCandidate(pick, false);
+    } else if (form.ltpf.recordId) {
+      setForm((f) => ({ ...f, ltpfCents: null, ltpf: NO_LTPF }));
     }
   }, [lookup]);
+
+  // CO2 when the listing has none: chosen price-list version → same version nearby → EEA estimate.
+  const chosen = lookup?.candidates.find((c) => c.record.id === form.ltpf.recordId) ?? null;
+  useEffect(() => {
+    const list =
+      chosen && records && (chosen.criterion === 'exact' || chosen.criterion === 'gamma')
+        ? co2FromPriceList(records, chosen.record, form.firstRegistration)
+        : null;
+    const eeaEstimate = eea
+      ? estimateCo2FromEea(eea, {
+          make: form.make,
+          model: form.model,
+          fuel: form.fuel,
+          powertrain: form.powertrain,
+          displacementCc: form.displacementCc,
+          powerKw: form.powerKw ?? (form.powerHp !== null ? Math.round(form.powerHp / 1.36) : null),
+          firstRegistration: form.firstRegistration,
+        })
+      : null;
+    setForm((f) => withCo2Estimate(f, list, eeaEstimate));
+  }, [chosen?.record.id, records, eea, form.make, form.model, form.fuel, form.powertrain, form.displacementCc, form.powerKw, form.powerHp, form.firstRegistration, form.co2GKm]);
 
   const eligibility = checkEligibility(form.countryCode);
   const commercial = commercialCheck(listing, form);
   const blockedCommercial = commercial.likelyCommercial && !form.commercialOverride;
   const powertrainUsable = form.powertrain !== null && form.powertrainConfirmed;
-  const inputs = toInputs(form, settings, powertrainUsable);
+  const calcPt = calculationPowertrain(form);
+  const inputs = toInputs(form, settings, calcPt.powertrain);
   const outcome = eligibility.status === 'non-eu' || blockedCommercial ? null : runCalculation(rules, inputs, settings.costs, today);
   const tax = outcome?.tax ?? null;
 
@@ -373,6 +420,8 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
         ) : null}
 
         {taxOk?.flags.historic ? <Banner kind="info">{t('banner.historic')}</Banner> : null}
+
+        {calcPt.provisional && taxOk ? <Banner kind="info">{t('banner.powertrainProvisional', { pt: t(`pt.${calcPt.powertrain}`) })}</Banner> : null}
 
         {missing.size ? (
           <Banner kind="warn" title={t('missing.title')}>

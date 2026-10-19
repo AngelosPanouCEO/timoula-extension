@@ -48,7 +48,8 @@ export interface CandidateChecks {
 }
 
 /** Art. 9 criterion that produced the value; 'exact' = same version in the list of the era. */
-export type LtpfCriterion = 'exact' | 'beta' | 'gamma' | 'epsilon';
+/** residual: estimate from the listing price and the customs depreciation (no price list matched). */
+export type LtpfCriterion = 'exact' | 'beta' | 'gamma' | 'epsilon' | 'residual';
 
 export interface LtpfCandidate {
   record: LtpfRecord;
