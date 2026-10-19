@@ -20,11 +20,11 @@ import time
 BASE = 'https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/'
 SITEMAP = 'https://www.adac.de/sitemaps/sitemap-autokatalog.xml'
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36'
-DELAY_S = 1.5
+DELAY_S = 1.0
 
 
 def curl(url, out):
-    r = subprocess.run(['curl', '-sS', '-L', '--max-time', '60', '-A', UA, '-o', out, '-w', '%{http_code}', url], capture_output=True, text=True)
+    r = subprocess.run(['curl', '-sS', '-L', '--compressed', '--max-time', '60', '-A', UA, '-o', out, '-w', '%{http_code}', url], capture_output=True, text=True)
     return r.stdout.strip()
 
 

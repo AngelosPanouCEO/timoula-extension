@@ -29,7 +29,7 @@ apps/extension/
   src/shared/             i18n (el/en), IndexedDB, settings, formatting, UI components
   test/fixtures/          Real listing pages (personal data removed) + parser tests
 scripts/                  e2e test, fixture sanitiser, icon generator
-docs/                     Architecture, tax rules notes, market-value/legal notes
+docs/                     Architecture, tax rules, market value, estimates (missing ΛΤΠΦ/CO2) notes
 ```
 
 ## Local setup
