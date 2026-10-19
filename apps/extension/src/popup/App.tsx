@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
   buildCarGrUrl, buildComparison, checkEligibility, COUNTRY_NAMES, lookupLtpf, PRODUCT, runCalculation, todayIso, verdict,
   type Comparable, type ExtractionResult, type ListingData, type LtpfCandidate, type LtpfRecord, type MarketQuery, co2FromPriceList, dePriceCandidates, estimateCo2FromEea, loadDePriceTable,
-  loadEeaCo2Table, lookupLtpfWithEstimates, residualLtpfRecord, type DePriceTable, type EeaCo2Table,
+  loadEeaCo2Table, lookupLtpfWithEstimates, deMarketEstimate, type DePriceTable, type EeaCo2Table,
 } from '@timoula/core';
 import { matchSite } from '../extract/sites';
 import { activeTab, extractFromTab, openPage, openTab } from '../shared/chromeApi';
@@ -191,16 +191,11 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
       powertrain: form.powertrain,
       gearbox: form.gearbox,
     };
-    const residual = residualLtpfRecord(rules, q, {
-      priceCents: form.priceCents,
-      countryCode: form.countryCode,
-      firstRegistration: form.firstRegistration,
-      expectedRegistration: form.expectedRegistration,
-      mileageKm: form.mileageKm,
-      bodyCategory: form.bodyCategory,
+    return lookupLtpfWithEstimates(records, q, {
+      foreign: dePrices ? dePriceCandidates(dePrices, q) : [],
+      market: dePrices ? deMarketEstimate(dePrices, q) : null,
     });
-    return lookupLtpfWithEstimates(records, q, { foreign: dePrices ? dePriceCandidates(dePrices, q) : [], residual });
-  }, [records, dePrices, form.make, form.model, form.version, form.firstRegistration, form.displacementCc, form.powerKw, form.powerHp, form.co2GKm, co2Estimated, form.fuel, form.powertrain, form.gearbox, form.priceCents, form.countryCode, form.expectedRegistration, form.mileageKm, form.bodyCategory]);
+  }, [records, dePrices, form.make, form.model, form.version, form.firstRegistration, form.displacementCc, form.powerKw, form.powerHp, form.co2GKm, co2Estimated, form.fuel, form.powertrain, form.gearbox]);
 
   const useCandidate = (c: LtpfCandidate, markEdited: boolean) =>
     setForm((f) => ({
@@ -212,12 +207,12 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
         criterion: c.criterion,
         official: c.official,
         label:
-          c.criterion === 'residual'
+          c.criterion === 'market'
             ? (c.record.notes ?? '')
             : `${c.record.brand} ${c.record.model} ${c.record.version} ${c.record.engine_label ?? ''} ${c.record.transmission ?? ''}${c.criterion === 'epsilon' ? ` · ${c.record.list_label ?? ''}` : ''}`.replace(/\s+/g, ' ').trim(),
         // Only Greek price lists have a validity window worth showing.
-        listFrom: c.criterion === 'epsilon' || c.criterion === 'residual' ? null : c.record.valid_from,
-        listTo: c.criterion === 'epsilon' || c.criterion === 'residual' ? null : c.record.valid_to,
+        listFrom: c.criterion === 'epsilon' || c.criterion === 'market' ? null : c.record.valid_from,
+        listTo: c.criterion === 'epsilon' || c.criterion === 'market' ? null : c.record.valid_to,
       },
       edited: markEdited && !f.edited.includes('ltpf') ? [...f.edited, 'ltpf'] : f.edited,
     }));

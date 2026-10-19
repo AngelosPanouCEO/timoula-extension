@@ -11,8 +11,13 @@ with its source.
 | 1 | Greek importer price list, same version, list of the era | Επίσημη τιμή | `verified` records only (`isOfficialPrice`) |
 | 2 | Greek list, same version, another period (γ) | Εκτίμηση | strict match on cc/power/fuel/gearbox |
 | 3 | German base price of the same version without 19% VAT (ε) | Εκτίμηση | ADAC Autokatalog, `ltpf/de-prices.json` |
-| 4 | Greek sister version (β) | Εκτίμηση | moved after 5 when its power is > 15% away from the car's |
-| 5 | Listing price ÷ market residual value (age, mileage) ÷ VAT of the origin country | Εκτίμηση (χαμηλή ακρίβεια) | `marketResidual()`; the customs depreciation table is steeper than the market and is not used here |
+| 4 | Greek sister version (β) | Εκτίμηση | moved to the end when its power is > 15% away from the car's |
+| 5 | German price of the closest version of the same model (power ±25%), closest power first | Εκτίμηση (χαμηλή ακρίβεια) | e.g. a 325d when ADAC has only 320d/330d |
+| 6 | Median German price of new cars with similar power and fuel, around the first registration | Εκτίμηση (χαμηλή ακρίβεια) | same make (kW ±10%, ≥ 3 versions), else all makes (kW ±5%, ≥ 5) — `deMarketEstimate()` |
+
+Every fallback is a **new-car** price. The ΛΤΠΦ is never derived from the used listing price:
+dividing it by a residual value gave extreme results for cars that hold their value (a Porsche
+911 Carrera T of 2018 at 79.900 € came out at 240.557 €).
 
 With several candidates the most likely is used (gearbox and version name first) and the others
 stay selectable.
@@ -25,8 +30,13 @@ pages. **ADAC's terms of use for commercial reuse must be checked before the ext
 published**; until then the data is for testing. Prices listed 7–12/2020 may include Germany's
 temporary 16% VAT.
 
+**Model names.** Listings use generation codes or version numbers where ADAC uses the model:
+Porsche 991/997/… → 911, 718 Boxster → Boxster, BMW 325 → 3er-Reihe (`MODEL_ALIASES` and the BMW
+series rule in `ltpf/dePrice.ts`).
+
 **US-only cars.** No open source of US list prices (MSRP) was found; they fall back to the
-residual estimate (5).
+all-makes median (6), which is unreliable for powerful cars that are cheap for their power
+(a Dodge Challenger Hellcat lands among the supercars). The client should enter the value by hand.
 
 ## CO2
 

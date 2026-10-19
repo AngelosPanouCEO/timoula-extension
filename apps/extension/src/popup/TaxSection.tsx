@@ -25,11 +25,11 @@ function CandidateRow(props: { c: LtpfCandidate; selected: boolean; onUse: () =>
     <div class={`candidate ${props.selected ? 'selected' : ''}`}>
       <div class="meta">
         <div>
-          <strong>{props.c.criterion === 'residual' ? t('ltpf.criterion.residual') : `${r.model} ${r.version}`}</strong>{' '}
+          <strong>{props.c.criterion === 'market' ? t('ltpf.criterion.market') : `${r.model} ${r.version}`}</strong>{' '}
           {r.engine_label ?? ''} {r.transmission ?? ''} {r.model_year_tag ? `(${r.model_year_tag})` : ''}
         </div>
         <div class="small muted">
-          {props.c.criterion === 'residual'
+          {props.c.criterion === 'market'
             ? `${r.notes ?? ''} · `
             : props.c.criterion === 'epsilon'
               ? `${r.list_label ?? ''} · ${r.notes ?? ''} · `

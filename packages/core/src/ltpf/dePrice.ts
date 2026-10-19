@@ -42,12 +42,22 @@ function withoutMake(name: string, slug: string): string {
   return name;
 }
 
-function modelMatches(slug: string, nameTok: string[], listingModel: string): boolean {
+/** Listing model names that ADAC files under another model (generation codes, model families). */
+const MODEL_ALIASES: Record<string, Record<string, string>> = {
+  PORSCHE: { '930': '911', '964': '911', '993': '911', '996': '911', '997': '911', '991': '911', '992': '911', '718BOXSTER': 'BOXSTER', '718CAYMAN': 'CAYMAN', '718SPYDER': 'BOXSTER' },
+};
+
+function modelMatches(slug: string, nameTok: string[], listingModel: string, make: string): boolean {
+  const alias = MODEL_ALIASES[make]?.[compact(listingModel)];
+  if (alias) listingModel = alias;
   const lm = compact(listingModel);
   const lt = tokens(listingModel);
   if (!lm) return false;
   const s = compact(slug);
   if (s === lm || s.startsWith(lm) || (lm.startsWith(s) && s.length >= 2)) return true;
+  // BMW listings give the version number ("325"), ADAC the series ("3er-reihe").
+  const series = make === 'BMW' ? /^([1-8])\d\d[A-Z]{0,3}$/.exec(lm) : null;
+  if (series && s.startsWith(`${series[1]}ER`)) return true;
   // BMW "3er-reihe" vs listing "320": compare with the first word of the version name ("320D").
   const first = nameTok[0] ?? '';
   if (!first || !lt[0]) return false;
@@ -88,17 +98,19 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
     if (when < monthIndex(from) - 3 || (to && when > monthIndex(to) + 3)) continue;
     const rest = withoutMake(name, make);
     const nt = tokens(rest);
-    if (!modelMatches(table.models[mo]!, nt, q.model)) continue;
+    if (!modelMatches(table.models[mo]!, nt, q.model, make)) continue;
     // Power: ±2 kW; or, for the same designation ("C 200"), ±15% — ADAC gives mild hybrids'
     // system power (C 200 W206: 165 kW), listings the engine's (150 kW).
-    let tier: 'exact' | 'near' | null = qkw === null ? 'exact' : null;
+    let tier: 'exact' | 'designation' | 'near' | null = qkw === null ? 'exact' : null;
     if (qkw !== null && kw !== null) {
+      const rel = Math.abs(kw - qkw) / qkw;
       if (Math.abs(kw - qkw) <= 2) tier = 'exact';
-      else if (Math.abs(kw - qkw) / qkw <= 0.15 && designation.length >= 2 && compact(rest).startsWith(designation)) tier = 'near';
+      else if (rel <= 0.15 && designation.length >= 2 && compact(rest).startsWith(designation)) tier = 'designation';
+      else if (rel <= 0.25) tier = 'near'; // closest version of the same model (other power)
     }
     if (!tier) continue;
     const [modelWord, ...versionWords] = rest.split(/\s+/);
-    (tier === 'exact' ? exact : near).push({
+    (tier === 'near' ? near : exact).push({
       id: `adac-${id}`,
       brand: normName(q.make),
       model: modelWord ?? normName(q.model),
@@ -110,8 +122,8 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       fuel: fuel === 'petrol_electric' ? 'petrol' : fuel === 'diesel_electric' ? 'diesel' : (fuel as LtpfRecord['fuel']),
       powertrain: null,
       power_ps: kw !== null ? Math.round(kw * 1.36) : null,
-      // Near matches keep the car's power so the power check does not exclude them.
-      power_kw: tier === 'near' ? q.powerKw : kw,
+      // Inexact power matches keep the car's power so the power check does not exclude them.
+      power_kw: tier === 'exact' ? kw : q.powerKw,
       transmission: transmissionOf(name),
       drive: /QUATTRO|4MATIC|XDRIVE|4MOTION|ALLRAD|AWD|4X4/.test(normName(name)) ? 'AWD' : null,
       body_type: null,
@@ -122,7 +134,7 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       valid_from: `${from}-01`,
       valid_to: to ? `${to}-28` : null,
       source_type: 'foreign_price_estimate',
-      confidence: tier === 'exact' ? 'medium' : 'low',
+      confidence: tier === 'near' ? 'low' : 'medium',
       importer: null,
       protocol_no: null,
       list_label: `ADAC ${from.slice(5)}/${from.slice(2, 4)}–${to ? `${to.slice(5)}/${to.slice(2, 4)}` : ''}`,
@@ -131,8 +143,69 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       source_sha256: null,
       extraction_method: 'html',
       verified: false,
-      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${tier === 'near' ? `· η ADAC δίνει ${kw} kW` : ''}.`,
+      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${tier === 'near' ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW)` : tier === 'designation' ? ` · η ADAC δίνει ${kw} kW` : ''}.`,
     });
   }
-  return exact.length ? exact : near;
+  if (exact.length) return exact;
+  // Closest power first, a few at most.
+  const k = (r: LtpfRecord) => Math.abs(Number(/\((\d+) kW\)/.exec(r.notes ?? '')?.[1] ?? 0) - (qkw ?? 0));
+  return near.sort((a, b) => k(a) - k(b)).slice(0, 4);
+}
+
+/**
+ * Last resort: median German base price (without VAT) of new cars with similar power and the same
+ * fuel, sold around the date of first registration — same make first (≥ 3 versions, kW ±10%),
+ * else all makes (≥ 5 versions, kW ±5%). Bounded, but only a rough estimate.
+ */
+export function deMarketEstimate(table: DePriceTable, q: LtpfQuery): LtpfRecord | null {
+  const qkw = q.powerKw ?? (q.powerHp !== null ? q.powerHp / 1.36 : null);
+  if (qkw === null || !q.firstRegistration || !q.make) return null;
+  const when = monthIndex(ym(q.firstRegistration));
+  const mi = table.makes.indexOf(makeSlug(q.make));
+  const inPeriod = (from: string, to: string | null) => when >= monthIndex(from) - 12 && (!to || when <= monthIndex(to) + 12);
+  const pick = (sameMake: boolean, tol: number, min: number) => {
+    const prices = table.rows
+      .filter((r) => (!sameMake || r[0] === mi) && fuelFits(r[3], q.fuel) && r[4] !== null && Math.abs(r[4] - qkw) / qkw <= tol && inPeriod(r[5], r[6]))
+      .map((r) => r[7])
+      .sort((a, b) => a - b);
+    return prices.length >= min ? { median: prices[Math.floor(prices.length / 2)]!, n: prices.length } : null;
+  };
+  const make = mi >= 0 ? pick(true, 0.1, 3) : null;
+  const res = make ?? pick(false, 0.05, 5);
+  if (!res) return null;
+  const scope = make ? `ίδιας μάρκας` : `όλων των μαρκών`;
+  return {
+    id: make ? 'market-make' : 'market-all',
+    brand: normName(q.make),
+    model: q.model ?? '',
+    model_year_tag: null,
+    version: q.versionText ?? '',
+    engine_label: null,
+    displacement_l: null,
+    displacement_cc: q.displacementCc,
+    fuel: null,
+    powertrain: null,
+    power_ps: q.powerHp,
+    power_kw: q.powerKw,
+    transmission: null,
+    drive: null,
+    body_type: null,
+    co2_g_km: null,
+    co2_cycle: null,
+    ltpf_eur: Math.round((res.median / (1 + DE_VAT_RATE)) * 100) / 100,
+    retail_incl_tax_eur: res.median,
+    valid_from: q.firstRegistration,
+    valid_to: null,
+    source_type: 'foreign_price_estimate',
+    confidence: 'low',
+    importer: null,
+    protocol_no: null,
+    list_label: null,
+    source_url: ADAC_URL,
+    source_page: null,
+    source_sha256: null,
+    extraction_method: 'html',
+    verified: false,
+    notes: `Διάμεσος ${res.n} καινούργιων ${scope} με παρόμοια ισχύ και καύσιμο στη Γερμανία (ADAC): ${res.median.toLocaleString('el-GR')} € με ΦΠΑ 19%, χωρίς ΦΠΑ.`,
+  };
 }

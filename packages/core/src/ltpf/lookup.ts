@@ -48,8 +48,8 @@ export interface CandidateChecks {
 }
 
 /** Art. 9 criterion that produced the value; 'exact' = same version in the list of the era. */
-/** residual: estimate from the listing price and the customs depreciation (no price list matched). */
-export type LtpfCriterion = 'exact' | 'beta' | 'gamma' | 'epsilon' | 'residual';
+/** market: median German new-car price of similar power (no version matched anywhere). */
+export type LtpfCriterion = 'exact' | 'beta' | 'gamma' | 'epsilon' | 'market';
 
 export interface LtpfCandidate {
   record: LtpfRecord;
