@@ -58,6 +58,13 @@ describe('ΛΤΠΦ estimates when the Greek lists have no exact match', () => {
     expect(r.status).toBe('choose'); // the popup uses the first and asks to confirm
   });
 
+  it('drive in the listing text (4M, quattro, xDrive…) picks the all-wheel-drive version', () => {
+    const awd = q({ versionText: '320d xDrive Touring Sport Line' });
+    const table: DePriceTable = { ...de, rows: [...de.rows, [0, 0, 'BMW 320d Sport Line xDrive Steptronic', 'diesel', 140, '2015-07', '2019-06', 49_000, 9]] };
+    const r = lookupLtpfWithEstimates(records, awd, { foreign: dePriceCandidates(table, awd), residual: null });
+    expect(r.candidates[0]!.record.id).toBe('adac-9');
+  });
+
   it('nothing in any list: the residual estimate keeps the calculation going', () => {
     const r = lookupLtpfWithEstimates(records, q({}), { foreign: [], residual: residualLtpfRecord(rules, q({}), residualInput) });
     expect(r).toMatchObject({ status: 'single', criterion: 'residual' });

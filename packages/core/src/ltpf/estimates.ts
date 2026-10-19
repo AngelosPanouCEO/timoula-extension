@@ -14,6 +14,7 @@
 import type { TaxRules } from '../tax/rulesSchema';
 import type { BodyCategory } from '../types';
 import { monthsBetween } from '../util/dates';
+import { normName } from '../util/text';
 import { checkRecord, lookupLtpf, versionScore, type LtpfCandidate, type LtpfLookupResult, type LtpfQuery, type Synonyms, DEFAULT_SYNONYMS } from './lookup';
 import type { LtpfRecord } from './schema';
 
@@ -122,11 +123,18 @@ export function lookupLtpfWithEstimates(
     criterion,
     official: false,
   });
+  const awdWanted = /\b(4M|4MATIC|QUATTRO|XDRIVE|4MOTION|ALLRAD|AWD|4X4|4WD|ALL4|Q4)\b/.test(normName(q.versionText));
   const de = (extra.foreign ?? [])
     .map((r) => toCandidate(r, 'epsilon'))
     .filter((c) => c.checks.gearbox !== 'mismatch' && c.checks.fuel !== 'mismatch')
-    // A matching gearbox outranks the name: ADAC names say "Steptronic", listings say "Automatik".
-    .sort((a, b) => Number(b.checks.gearbox === 'match') - Number(a.checks.gearbox === 'match') || b.versionScore - a.versionScore || a.record.ltpf_eur - b.record.ltpf_eur);
+    // Gearbox and drive outrank the name: ADAC says "Steptronic"/"4MATIC", listings "Automatik"/"4M".
+    .sort(
+      (a, b) =>
+        Number(b.checks.gearbox === 'match') - Number(a.checks.gearbox === 'match') ||
+        Number((b.record.drive === 'AWD') === awdWanted) - Number((a.record.drive === 'AWD') === awdWanted) ||
+        b.versionScore - a.versionScore ||
+        a.record.ltpf_eur - b.record.ltpf_eur,
+    );
   const residual = extra.residual ? toCandidate(extra.residual, 'residual') : null;
   const beta = gr.criterion === 'beta' ? gr.candidates : [];
   const qkw = q.powerKw ?? (q.powerHp !== null ? q.powerHp / 1.36 : null);

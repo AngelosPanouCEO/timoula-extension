@@ -69,10 +69,11 @@ def fetch(cache, brands):
         time.sleep(DELAY_S)
 
 
-PERIOD_RE = re.compile(r'\((\d{2})/(\d{2})\s*-\s*(?:(\d{2})/(\d{2}))?\s*\)\s*$')
-FUELS = {'Benzin': 'petrol', 'Diesel': 'diesel', 'Elektro': 'electric', 'Autogas (LPG)': 'lpg', 'Erdgas (CNG)': 'cng',
-         'Hybrid (Benzin/Elektro)': 'petrol_electric', 'Hybrid (Diesel/Elektro)': 'diesel_electric', 'Plug-in-Hybrid': 'petrol_electric',
-         'Wasserstoff': 'hydrogen', 'Super': 'petrol', 'Super Plus': 'petrol', 'Normal': 'petrol'}
+PERIOD_RE = re.compile(r'\((?:ab\s*)?(\d{2})/(\d{2})\s*(?:-\s*(?:(\d{2})/(\d{2}))?)?\s*\)\s*$')
+FUELS = {'Super': 'petrol', 'Super Plus': 'petrol', 'Normal': 'petrol', 'Bio-Ethanol': 'petrol', 'Diesel': 'diesel', 'Strom': 'electric',
+         'Super / Strom': 'petrol_electric', 'Super Plus / Strom': 'petrol_electric', 'Strom / Super': 'petrol_electric',
+         'Strom / Super Plus': 'petrol_electric', 'Diesel / Strom': 'diesel_electric', 'Flüssiggas': 'lpg', 'Erdgas': 'cng',
+         'Erdgas / Super': 'cng', 'Wasserstoff': 'hydrogen'}
 
 
 def year4(yy):

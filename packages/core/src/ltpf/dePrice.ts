@@ -76,20 +76,29 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
   const mi = table.makes.indexOf(makeSlug(q.make));
   if (mi < 0) return [];
   const when = monthIndex(ym(q.firstRegistration));
-  const out: LtpfRecord[] = [];
   const make = table.makes[mi]!;
+  const qkw = q.powerKw ?? (q.powerHp !== null ? q.powerHp / 1.36 : null);
+  const designation = compact(q.model);
+  const exact: LtpfRecord[] = [];
+  const near: LtpfRecord[] = [];
   for (const r of table.rows) {
     if (r[0] !== mi) continue;
     const [, mo, name, fuel, kw, from, to, price, id] = r;
     if (!fuelFits(fuel, q.fuel)) continue;
-    if (q.powerKw !== null && (kw === null || Math.abs(kw - q.powerKw) > 2)) continue;
-    if (q.powerKw === null && q.powerHp !== null && (kw === null || Math.abs(kw * 1.36 - q.powerHp) > 4)) continue;
     if (when < monthIndex(from) - 3 || (to && when > monthIndex(to) + 3)) continue;
     const rest = withoutMake(name, make);
     const nt = tokens(rest);
     if (!modelMatches(table.models[mo]!, nt, q.model)) continue;
+    // Power: ±2 kW; or, for the same designation ("C 200"), ±15% — ADAC gives mild hybrids'
+    // system power (C 200 W206: 165 kW), listings the engine's (150 kW).
+    let tier: 'exact' | 'near' | null = qkw === null ? 'exact' : null;
+    if (qkw !== null && kw !== null) {
+      if (Math.abs(kw - qkw) <= 2) tier = 'exact';
+      else if (Math.abs(kw - qkw) / qkw <= 0.15 && designation.length >= 2 && compact(rest).startsWith(designation)) tier = 'near';
+    }
+    if (!tier) continue;
     const [modelWord, ...versionWords] = rest.split(/\s+/);
-    out.push({
+    (tier === 'exact' ? exact : near).push({
       id: `adac-${id}`,
       brand: normName(q.make),
       model: modelWord ?? normName(q.model),
@@ -101,7 +110,8 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       fuel: fuel === 'petrol_electric' ? 'petrol' : fuel === 'diesel_electric' ? 'diesel' : (fuel as LtpfRecord['fuel']),
       powertrain: null,
       power_ps: kw !== null ? Math.round(kw * 1.36) : null,
-      power_kw: kw,
+      // Near matches keep the car's power so the power check does not exclude them.
+      power_kw: tier === 'near' ? q.powerKw : kw,
       transmission: transmissionOf(name),
       drive: /QUATTRO|4MATIC|XDRIVE|4MOTION|ALLRAD|AWD|4X4/.test(normName(name)) ? 'AWD' : null,
       body_type: null,
@@ -112,17 +122,17 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       valid_from: `${from}-01`,
       valid_to: to ? `${to}-28` : null,
       source_type: 'foreign_price_estimate',
-      confidence: 'medium',
+      confidence: tier === 'exact' ? 'medium' : 'low',
       importer: null,
       protocol_no: null,
       list_label: `ADAC ${from.slice(5)}/${from.slice(2, 4)}–${to ? `${to.slice(5)}/${to.slice(2, 4)}` : ''}`,
-      source_url: `${ADAC_URL}`,
+      source_url: ADAC_URL,
       source_page: null,
       source_sha256: null,
       extraction_method: 'html',
       verified: false,
-      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ.`,
+      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${tier === 'near' ? `· η ADAC δίνει ${kw} kW` : ''}.`,
     });
   }
-  return out;
+  return exact.length ? exact : near;
 }

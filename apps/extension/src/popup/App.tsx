@@ -229,8 +229,6 @@ function Calculator({ listing, settings }: { listing: ListingData; settings: App
     const pick = lookup.selected ?? lookup.candidates[0] ?? null;
     if (pick) {
       const cents = Math.round(pick.record.ltpf_eur * 100);
-      const stillListed = lookup.candidates.find((c) => c.record.id === form.ltpf.recordId);
-      if (stillListed && !lookup.selected && Math.round(stillListed.record.ltpf_eur * 100) === form.ltpfCents) return; // keep the client's earlier pick
       if (form.ltpf.recordId !== pick.record.id || form.ltpf.official !== pick.official || form.ltpfCents !== cents) useCandidate(pick, false);
     } else if (form.ltpf.recordId) {
       setForm((f) => ({ ...f, ltpfCents: null, ltpf: NO_LTPF }));
