@@ -4,8 +4,13 @@ German base prices ("Grundpreis", incl. 19% VAT) per version from the ADAC Autok
 customs criterion ε (price in the country of origin). One request per model generation: the
 generation page embeds every version (name with production period, fuel, kW, hp, base price).
 
-  python3 -I adac_crawl.py fetch <cache dir> [brand ...]   # polite: one page per 1.5 s, cached
+  python3 -I adac_crawl.py fetch <cache dir> [brand ...]    # one page per second, cached
+  python3 -I adac_crawl.py details <cache dir> [brand ...]  # version pages the generation pages lack
   python3 -I adac_crawl.py build <cache dir> <out.json>
+
+A generation page embeds only its first body (e.g. Octavia Limousine); the other bodies (Combi,
+RS Combi, Avant, Touring…) load through ADAC's /bff API, which robots.txt disallows. The sitemap
+also lists single version pages, some of them for the other bodies: `details` reads those.
 
 robots.txt allows /rund-ums-fahrzeug/autokatalog/. ADAC's terms of use for commercial reuse must
 be checked before the extension is published (see docs/market-value.md / SPEC.md).
@@ -69,6 +74,53 @@ def fetch(cache, brands):
         time.sleep(DELAY_S)
 
 
+def sitemap_cars(cache):
+    """(generation path, car id) for every version page in the sitemap."""
+    curl(SITEMAP, os.path.join(cache, 'sitemap.xml')) if not os.path.exists(os.path.join(cache, 'sitemap.xml')) else None
+    locs = re.findall(r'<loc>([^<]+)</loc>', open(os.path.join(cache, 'sitemap.xml'), encoding='utf-8').read())
+    out = []
+    for u in locs:
+        parts = u.replace(BASE, '').strip('/').split('/')
+        if len(parts) == 4 and parts[3].isdigit():
+            out.append(('/'.join(parts[:3]), parts[3]))
+    return out
+
+
+def details(cache, brands):
+    os.makedirs(os.path.join(cache, 'car'), exist_ok=True)
+    have = set()
+    for name in os.listdir(os.path.join(cache, 'gen')):
+        if name.endswith('.json'):
+            have |= {str(i['id']) for i in json.load(open(os.path.join(cache, 'gen', name), encoding='utf-8'))['items']}
+    todo = [(g, c) for g, c in sitemap_cars(cache) if c not in have and (not brands or g.split('/')[0] in brands)]
+    for i, (g, c) in enumerate(todo):
+        out = os.path.join(cache, 'car', c + '.json')
+        if os.path.exists(out):
+            continue
+        tmp = out + '.html'
+        for attempt in range(3):
+            code = curl(BASE + g + '/' + c + '/', tmp)
+            if code in ('200', '404'):
+                break
+            time.sleep(5 * (attempt + 1))
+        item = None
+        if code == '200':
+            state = apollo(open(tmp, encoding='utf-8', errors='ignore').read()) or {}
+            page = next((v for k, v in state.get('ROOT_QUERY', {}).items() if k.startswith('carPage(')), {}).get('carPage') or {}
+            bd = page.get('basicData') or {}
+            title = (page.get('metaData') or {}).get('teaserHeadline') or ''
+            if not title:
+                m = re.search(r'"teaserHeadline":"([^"]+)"', open(tmp, encoding='utf-8', errors='ignore').read())
+                title = m.group(1) if m else ''
+            price = re.sub(r'[^0-9]', '', bd.get('basePrice') or '')
+            if title and price:
+                item = {'id': c, 'name': title, 'fuelType': bd.get('fuelType'), 'powerInKW': str(bd.get('powerInKW') or ''), 'basePrice': int(price)}
+        json.dump({'generation': g, 'http': code, 'item': item}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
+        os.remove(tmp)
+        print(f'{i + 1}/{len(todo)} {g}/{c}: {code} {item and item["name"]}', flush=True)
+        time.sleep(DELAY_S)
+
+
 PERIOD_RE = re.compile(r'\((?:ab\s*)?(\d{2})/(\d{2})\s*(?:-\s*(?:(\d{2})/(\d{2}))?)?\s*\)\s*$')
 FUELS = {'Super': 'petrol', 'Super Plus': 'petrol', 'Normal': 'petrol', 'Bio-Ethanol': 'petrol', 'Diesel': 'diesel', 'Strom': 'electric',
          'Super / Strom': 'petrol_electric', 'Super Plus / Strom': 'petrol_electric', 'Strom / Super': 'petrol_electric',
@@ -85,12 +137,20 @@ def build(cache, out_path):
     rows = []
     makes, models = [], []
     mi, mo = {}, {}
-    for name in sorted(os.listdir(os.path.join(cache, 'gen'))):
-        if not name.endswith('.json'):
-            continue
-        g = json.load(open(os.path.join(cache, 'gen', name), encoding='utf-8'))
+    pages = [json.load(open(os.path.join(cache, 'gen', n), encoding='utf-8')) for n in sorted(os.listdir(os.path.join(cache, 'gen'))) if n.endswith('.json')]
+    car_dir = os.path.join(cache, 'car')
+    if os.path.isdir(car_dir):
+        for n in sorted(os.listdir(car_dir)):
+            c = json.load(open(os.path.join(car_dir, n), encoding='utf-8')) if n.endswith('.json') else None
+            if c and c['item']:
+                pages.append({'generation': c['generation'], 'items': [c['item']]})
+    seen = set()
+    for g in pages:
         brand, model, _gen = g['generation'].split('/')
         for it in g['items']:
+            if str(it['id']) in seen:
+                continue
+            seen.add(str(it['id']))
             price, title = it.get('basePrice'), it.get('name') or ''
             m = PERIOD_RE.search(title)
             if not price or not m:
@@ -124,5 +184,7 @@ def build(cache, out_path):
 if __name__ == '__main__':
     if sys.argv[1] == 'fetch':
         fetch(sys.argv[2], set(sys.argv[3:]))
+    elif sys.argv[1] == 'details':
+        details(sys.argv[2], set(sys.argv[3:]))
     else:
         build(sys.argv[2], sys.argv[3])

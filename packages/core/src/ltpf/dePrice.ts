@@ -2,7 +2,8 @@
  * Customs criterion ε (art. 9 Α.1203/2019): price in the country of origin without VAT.
  * German base prices per version ("Grundpreis", incl. 19% VAT) from the ADAC Autokatalog,
  * built by ltpf/tools/adac_crawl.py. A version matches on make, model, fuel, power (kW ±2)
- * and a production period that covers the date of first registration (±3 months).
+ * and a production period that covers the date of first registration (±3 months). Failing
+ * that: the closest power of the same model (±25%), in period, else sold up to 18 months away.
  * The result is shaped as ΛΤΠΦ records with source_type "foreign_price_estimate", so the
  * popup shows them like any other candidate, always as an estimate.
  * VERIFY: ADAC terms of use before publishing; prices listed 7–12/2020 may include 16% VAT.
@@ -91,11 +92,13 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
   const designation = compact(q.model);
   const exact: LtpfRecord[] = [];
   const near: LtpfRecord[] = [];
+  const other: LtpfRecord[] = []; // closest versions sold up to 18 months before or after
   for (const r of table.rows) {
     if (r[0] !== mi) continue;
     const [, mo, name, fuel, kw, from, to, price, id] = r;
     if (!fuelFits(fuel, q.fuel)) continue;
-    if (when < monthIndex(from) - 3 || (to && when > monthIndex(to) + 3)) continue;
+    const away = Math.max(0, monthIndex(from) - when, to ? when - monthIndex(to) : 0);
+    if (away > 18) continue;
     const rest = withoutMake(name, make);
     const nt = tokens(rest);
     if (!modelMatches(table.models[mo]!, nt, q.model, make)) continue;
@@ -109,8 +112,12 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       else if (rel <= 0.25) tier = 'near'; // closest version of the same model (other power)
     }
     if (!tier) continue;
+    const otherPeriod = away > 3;
+    if (otherPeriod) tier = 'near';
+    // Another version must also have the same fuel: a petrol car is not priced as its plug-in.
+    if (tier === 'near' && fuel && q.fuel && fuel !== q.fuel) continue;
     const [modelWord, ...versionWords] = rest.split(/\s+/);
-    (tier === 'near' ? near : exact).push({
+    (otherPeriod ? other : tier === 'near' ? near : exact).push({
       id: `adac-${id}`,
       brand: normName(q.make),
       model: modelWord ?? normName(q.model),
@@ -143,13 +150,14 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       source_sha256: null,
       extraction_method: 'html',
       verified: false,
-      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${tier === 'near' ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW)` : tier === 'designation' ? ` · η ADAC δίνει ${kw} kW` : ''}.`,
+      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${otherPeriod ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW), πωλήθηκε ${from.slice(5)}/${from.slice(0, 4)}–${to ? `${to.slice(5)}/${to.slice(0, 4)}` : ''}` : tier === 'near' ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW)` : tier === 'designation' ? ` · η ADAC δίνει ${kw} kW` : ''}.`,
     });
   }
   if (exact.length) return exact;
-  // Closest power first, a few at most.
+  // Closest power first (then closest in time), a few at most.
   const k = (r: LtpfRecord) => Math.abs(Number(/\((\d+) kW\)/.exec(r.notes ?? '')?.[1] ?? 0) - (qkw ?? 0));
-  return near.sort((a, b) => k(a) - k(b)).slice(0, 4);
+  const t = (r: LtpfRecord) => Math.abs(monthIndex(r.valid_from) - when);
+  return (near.length ? near : other).sort((a, b) => k(a) - k(b) || t(a) - t(b)).slice(0, 4);
 }
 
 /**

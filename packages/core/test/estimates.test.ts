@@ -54,6 +54,14 @@ describe('ΛΤΠΦ estimates when the Greek lists have no exact match (new-car p
     expect(c[0]!.notes).toContain('κοντινότερη έκδοση');
   });
 
+  it('no version on sale at the time (e.g. a body ADAC lacks): the closest version sold up to 18 months away', () => {
+    const c = dePriceCandidates(de, q({ firstRegistration: '2020-06-30' })); // the table's 320d ended 06/2019
+    expect(c.map((r) => r.id)).toEqual(['adac-1', 'adac-2', 'adac-3']); // 140, 140, 110 kW
+    expect(c[0]!.confidence).toBe('low');
+    expect(c[0]!.notes).toContain('πωλήθηκε 07/2015–06/2019');
+    expect(dePriceCandidates(de, q({ firstRegistration: '2021-01-31' }))).toEqual([]);
+  });
+
   it('brand without Greek lists: German price first (ε), market median as alternative', () => {
     const r = lookupLtpfWithEstimates(records, q({}), { foreign: dePriceCandidates(de, q({})), market: deMarketEstimate(de, q({})) });
     expect(r.criterion).toBe('epsilon');
