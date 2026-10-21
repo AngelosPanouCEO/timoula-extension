@@ -52,14 +52,35 @@ describe('ΛΤΠΦ estimates when the Greek lists have no exact match (new-car p
     expect(c.map((r) => r.id)).toEqual(['adac-6', 'adac-1', 'adac-2']); // 190, 140, 140 kW: closest first; 5 Series excluded
     expect(c[0]!.confidence).toBe('low');
     expect(c[0]!.notes).toContain('κοντινότερη έκδοση');
+    // Price adjusted for power: 52.000 € × (170/190)^0.45.
+    expect(c[0]!.retail_incl_tax_eur).toBe(Math.round(52_000 * Math.pow(170 / 190, 0.45)));
+    expect(c[1]!.retail_incl_tax_eur).toBeGreaterThan(46_900);
   });
 
   it('no version on sale at the time (e.g. a body ADAC lacks): the closest version sold up to 18 months away', () => {
     const c = dePriceCandidates(de, q({ firstRegistration: '2020-06-30' })); // the table's 320d ended 06/2019
-    expect(c.map((r) => r.id)).toEqual(['adac-1', 'adac-2', 'adac-3']); // 140, 140, 110 kW
+    expect(c.map((r) => r.id)).toEqual(['adac-1', 'adac-2']); // the same version first
     expect(c[0]!.confidence).toBe('low');
-    expect(c[0]!.notes).toContain('πωλήθηκε 07/2015–06/2019');
+    expect(c[0]!.notes).toContain('ίδια έκδοση, πωλήθηκε 07/2015–06/2019');
+    const other = dePriceCandidates(de, q({ model: '325', versionText: '325d Touring', firstRegistration: '2020-06-30', powerKw: 170, powerHp: 231 }));
+    expect(other.map((r) => r.id)).toEqual(['adac-6', 'adac-1', 'adac-2']); // 190, 140, 140 kW
+    expect(other[0]!.notes).toContain('κοντινότερη έκδοση του μοντέλου (190 kW), πωλήθηκε 07/2015–06/2019');
     expect(dePriceCandidates(de, q({ firstRegistration: '2021-01-31' }))).toEqual([]);
+  });
+
+  it('the model family is not a designation: an X5 M50d is not priced as the X5 40d without power adjustment', () => {
+    const x5: DePriceTable = { source: 't', makes: ['BMW'], models: ['X5'], rows: [
+      [0, 0, 'BMW X5 xDrive40d Steptronic', 'diesel', 250, '2020-08', '2023-02', 82_900, 1],
+      [0, 0, 'BMW X5 M50d xDrive Steptronic Sport', 'diesel', 294, '2018-11', '2019-06', 92_900, 2],
+    ] };
+    const m50d = (d: string) => q({ model: 'X5', versionText: 'M50d', firstRegistration: d, displacementCc: 2993, powerKw: 294, powerHp: 400 });
+    expect(dePriceCandidates(x5, m50d('2019-06-30')).map((r) => [r.id, r.confidence])).toEqual([['adac-2', 'medium']]);
+    // Later: the same version sold 15 months earlier comes before another version adjusted for power.
+    const later = dePriceCandidates(x5, m50d('2020-09-30'));
+    expect(later.map((r) => [r.id, r.confidence])).toEqual([['adac-2', 'low']]);
+    expect(later[0]!.notes).toContain('ίδια έκδοση, πωλήθηκε 11/2018–06/2019');
+    const after = dePriceCandidates({ ...x5, rows: [x5.rows[0]!] }, m50d('2020-09-30'));
+    expect(after[0]!.retail_incl_tax_eur).toBe(Math.round(82_900 * Math.pow(294 / 250, 0.45)));
   });
 
   it('brand without Greek lists: German price first (ε), market median as alternative', () => {

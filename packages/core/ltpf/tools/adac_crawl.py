@@ -6,6 +6,7 @@ generation page embeds every version (name with production period, fuel, kW, hp,
 
   python3 -I adac_crawl.py fetch <cache dir> [brand ...]    # one page per second, cached
   python3 -I adac_crawl.py details <cache dir> [brand ...]  # version pages the generation pages lack
+  python3 -I adac_crawl.py gaps <cache dir> <lo id> <hi id> <max gap> <worker> <workers>  # ids between known ones
   python3 -I adac_crawl.py build <cache dir> <out.json>
 
 A generation page embeds only its first body (e.g. Octavia Limousine); the other bodies (Combi,
@@ -58,7 +59,7 @@ def fetch(cache, brands):
     gens = [g for g in generations(cache) if not brands or g.split('/')[0] in brands]
     for i, g in enumerate(gens):
         out = os.path.join(cache, 'gen', g.replace('/', '__') + '.json')
-        if os.path.exists(out):
+        if os.path.exists(out) and 'models' in json.load(open(out, encoding='utf-8')):
             continue
         tmp = out + '.html'
         for attempt in range(3):
@@ -66,9 +67,15 @@ def fetch(cache, brands):
             if code == '200':
                 break
             time.sleep(5 * (attempt + 1))
+        if code != '200' and os.path.exists(out):
+            os.remove(tmp)
+            continue  # keep the earlier copy
         state = apollo(open(tmp, encoding='utf-8', errors='ignore').read()) if code == '200' else None
         items = [v for k, v in (state or {}).items() if k.startswith('ApilCarCollectionItem:')]
-        json.dump({'generation': g, 'http': code, 'items': items}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
+        # Bodies of the generation with their version counts (only the first one's versions are embedded).
+        models = [{'id': v.get('id'), 'name': v.get('name'), 'cars': v.get('carCount'), 'from': v.get('manufacturedFrom'), 'until': v.get('manufacturedUntil')}
+                  for k, v in (state or {}).items() if k.startswith('ApilModelCollectionItem:')]
+        json.dump({'generation': g, 'http': code, 'items': items, 'models': models}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
         os.remove(tmp)
         print(f'{i + 1}/{len(gens)} {g}: {code} {len(items)} versions', flush=True)
         time.sleep(DELAY_S)
@@ -121,6 +128,50 @@ def details(cache, brands):
         time.sleep(DELAY_S)
 
 
+def car_item(html):
+    """(generation path, item) from a version page."""
+    state = apollo(html) or {}
+    page = next((v for k, v in state.get('ROOT_QUERY', {}).items() if k.startswith('carPage(')), {}).get('carPage') or {}
+    bd = page.get('basicData') or {}
+    m = re.search(r'"teaserHeadline":"([^"]+)"', html)
+    price = re.sub(r'[^0-9]', '', bd.get('basePrice') or '')
+    slugs = [(page.get(k) or {}).get('slug') for k in ('brand', 'range', 'generation')]
+    if not (m and price and all(slugs)):
+        return None, None
+    return '/'.join(slugs), {'name': m.group(1), 'fuelType': bd.get('fuelType'), 'powerInKW': str(bd.get('powerInKW') or ''), 'basePrice': int(price)}
+
+
+def gaps(cache, lo, hi, max_gap, worker, workers):
+    """Version ids are numbered in sequence, the other bodies between the first body's versions
+    (BMW X5 G05: 30d 291551, M50d 291552, 40i 291553). Read the ids missing between known ones."""
+    os.makedirs(os.path.join(cache, 'car'), exist_ok=True)
+    known = set()
+    for name in os.listdir(os.path.join(cache, 'gen')):
+        if name.endswith('.json'):
+            known |= {int(i['id']) for i in json.load(open(os.path.join(cache, 'gen', name), encoding='utf-8'))['items']}
+    known |= {int(n[:-5]) for n in os.listdir(os.path.join(cache, 'car')) if n.endswith('.json')}
+    s = sorted(i for i in known if lo <= i < hi)
+    todo = [c for a, b in zip(s, s[1:]) if 1 < b - a <= max_gap for c in range(a + 1, b)]
+    todo = [c for k, c in enumerate(todo) if k % workers == worker]
+    for i, c in enumerate(todo):
+        out = os.path.join(cache, 'car', f'{c}.json')
+        if os.path.exists(out):
+            continue
+        tmp = out + f'.{worker}.html'
+        for attempt in range(3):
+            code = curl(f'{BASE}bmw/x5/g05-f95/{c}/', tmp)  # any path serves the id's page
+            if code in ('200', '404'):
+                break
+            time.sleep(5 * (attempt + 1))
+        g, item = car_item(open(tmp, encoding='utf-8', errors='ignore').read()) if code == '200' else (None, None)
+        if item:
+            item['id'] = str(c)
+        json.dump({'generation': g, 'http': code, 'item': item}, open(out, 'w', encoding='utf-8'), ensure_ascii=False)
+        os.remove(tmp)
+        print(f'{i + 1}/{len(todo)} {c}: {code} {g} {item and item["name"]}', flush=True)
+        time.sleep(DELAY_S)
+
+
 PERIOD_RE = re.compile(r'\((?:ab\s*)?(\d{2})/(\d{2})\s*(?:-\s*(?:(\d{2})/(\d{2}))?)?\s*\)\s*$')
 FUELS = {'Super': 'petrol', 'Super Plus': 'petrol', 'Normal': 'petrol', 'Bio-Ethanol': 'petrol', 'Diesel': 'diesel', 'Strom': 'electric',
          'Super / Strom': 'petrol_electric', 'Super Plus / Strom': 'petrol_electric', 'Strom / Super': 'petrol_electric',
@@ -142,7 +193,7 @@ def build(cache, out_path):
     if os.path.isdir(car_dir):
         for n in sorted(os.listdir(car_dir)):
             c = json.load(open(os.path.join(car_dir, n), encoding='utf-8')) if n.endswith('.json') else None
-            if c and c['item']:
+            if c and c['item'] and c['generation']:
                 pages.append({'generation': c['generation'], 'items': [c['item']]})
     seen = set()
     for g in pages:
@@ -186,5 +237,7 @@ if __name__ == '__main__':
         fetch(sys.argv[2], set(sys.argv[3:]))
     elif sys.argv[1] == 'details':
         details(sys.argv[2], set(sys.argv[3:]))
+    elif sys.argv[1] == 'gaps':  # gaps <cache> <lo> <hi> <max gap> <worker> <workers>
+        gaps(sys.argv[2], *map(int, sys.argv[3:8]))
     else:
         build(sys.argv[2], sys.argv[3])

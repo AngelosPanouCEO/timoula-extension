@@ -22,6 +22,11 @@ export interface DePriceTable {
 }
 
 export const DE_VAT_RATE = 0.19;
+/**
+ * Price ∝ power^0.45 between versions of the same model: median over 4.757 pairs of base versions
+ * (same model, fuel and launch date, power 8–30% apart) in the ADAC table.
+ */
+export const POWER_ELASTICITY = 0.45;
 const ADAC_URL = 'https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/';
 const MAKE_SLUGS: Record<string, string> = { VOLKSWAGEN: 'VW', 'MERCEDES-BENZ': 'MERCEDES-BENZ', 'MERCEDES BENZ': 'MERCEDES-BENZ', MERCEDES: 'MERCEDES-BENZ', 'ALFA ROMEO': 'ALFA-ROMEO', 'LAND ROVER': 'LAND-ROVER', 'ROLLS ROYCE': 'ROLLS-ROYCE', 'ASTON MARTIN': 'ASTON-MARTIN' };
 
@@ -89,10 +94,20 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
   const when = monthIndex(ym(q.firstRegistration));
   const make = table.makes[mi]!;
   const qkw = q.powerKw ?? (q.powerHp !== null ? q.powerHp / 1.36 : null);
+  // Engine designation: the listing's model when it carries one ("C 200"), else the first version
+  // word with a digit ("M50d", "xDrive40d"). The model family alone ("X5") is not one.
   const designation = compact(q.model);
+  const versionDesignation = tokens(q.versionText).find((w) => /\d/.test(w) && /[A-Z]/.test(w) && w.length >= 3) ?? '';
   const exact: LtpfRecord[] = [];
   const near: LtpfRecord[] = [];
+  const otherSame: LtpfRecord[] = []; // the same version, sold up to 18 months before or after
   const other: LtpfRecord[] = []; // closest versions sold up to 18 months before or after
+  const sameDesignation = (rest: string) => {
+    const c = compact(rest);
+    const modelWord = compact(rest.split(/\s+/)[0]);
+    if (designation.length > modelWord.length && c.startsWith(designation)) return true;
+    return versionDesignation !== '' && tokens(rest).includes(versionDesignation);
+  };
   for (const r of table.rows) {
     if (r[0] !== mi) continue;
     const [, mo, name, fuel, kw, from, to, price, id] = r;
@@ -108,16 +123,20 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
     if (qkw !== null && kw !== null) {
       const rel = Math.abs(kw - qkw) / qkw;
       if (Math.abs(kw - qkw) <= 2) tier = 'exact';
-      else if (rel <= 0.15 && designation.length >= 2 && compact(rest).startsWith(designation)) tier = 'designation';
+      else if (rel <= 0.15 && sameDesignation(rest)) tier = 'designation';
       else if (rel <= 0.25) tier = 'near'; // closest version of the same model (other power)
     }
     if (!tier) continue;
     const otherPeriod = away > 3;
-    if (otherPeriod) tier = 'near';
+    const sameVersion = tier !== 'near';
+    if (otherPeriod) tier = sameVersion ? 'designation' : 'near';
     // Another version must also have the same fuel: a petrol car is not priced as its plug-in.
     if (tier === 'near' && fuel && q.fuel && fuel !== q.fuel) continue;
     const [modelWord, ...versionWords] = rest.split(/\s+/);
-    (otherPeriod ? other : tier === 'near' ? near : exact).push({
+    // Another version's price, adjusted for the power difference (see POWER_ELASTICITY).
+    const factor = tier === 'near' && qkw !== null && kw ? Math.pow(qkw / kw, POWER_ELASTICITY) : 1;
+    const adjusted = Math.round(price * factor);
+    (otherPeriod ? (sameVersion ? otherSame : other) : tier === 'near' ? near : exact).push({
       id: `adac-${id}`,
       brand: normName(q.make),
       model: modelWord ?? normName(q.model),
@@ -136,12 +155,12 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       body_type: null,
       co2_g_km: null,
       co2_cycle: null,
-      ltpf_eur: Math.round((price / (1 + DE_VAT_RATE)) * 100) / 100,
-      retail_incl_tax_eur: price,
+      ltpf_eur: Math.round((adjusted / (1 + DE_VAT_RATE)) * 100) / 100,
+      retail_incl_tax_eur: adjusted,
       valid_from: `${from}-01`,
       valid_to: to ? `${to}-28` : null,
       source_type: 'foreign_price_estimate',
-      confidence: tier === 'near' ? 'low' : 'medium',
+      confidence: tier === 'near' || otherPeriod ? 'low' : 'medium',
       importer: null,
       protocol_no: null,
       list_label: `ADAC ${from.slice(5)}/${from.slice(2, 4)}–${to ? `${to.slice(5)}/${to.slice(2, 4)}` : ''}`,
@@ -150,13 +169,14 @@ export function dePriceCandidates(table: DePriceTable, q: LtpfQuery): LtpfRecord
       source_sha256: null,
       extraction_method: 'html',
       verified: false,
-      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${otherPeriod ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW), πωλήθηκε ${from.slice(5)}/${from.slice(0, 4)}–${to ? `${to.slice(5)}/${to.slice(0, 4)}` : ''}` : tier === 'near' ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW)` : tier === 'designation' ? ` · η ADAC δίνει ${kw} kW` : ''}.`,
+      notes: `Τιμή βάσης Γερμανίας ${price.toLocaleString('el-GR')} € με ΦΠΑ 19% (ADAC), χωρίς ΦΠΑ${otherPeriod && sameVersion ? ` · ίδια έκδοση, πωλήθηκε ${from.slice(5)}/${from.slice(0, 4)}–${to ? `${to.slice(5)}/${to.slice(0, 4)}` : ''}` : otherPeriod ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW), πωλήθηκε ${from.slice(5)}/${from.slice(0, 4)}–${to ? `${to.slice(5)}/${to.slice(0, 4)}` : ''}` : tier === 'near' ? ` · κοντινότερη έκδοση του μοντέλου (${kw} kW)` : tier === 'designation' ? ` · η ADAC δίνει ${kw} kW` : ''}${factor !== 1 ? ` · προσαρμογή για την ισχύ ${qkw!.toFixed(0)}/${kw} kW: ×${factor.toLocaleString('el-GR', { maximumFractionDigits: 3 })} → ${adjusted.toLocaleString('el-GR')} €` : ''}.`,
     });
   }
   if (exact.length) return exact;
   // Closest power first (then closest in time), a few at most.
   const k = (r: LtpfRecord) => Math.abs(Number(/\((\d+) kW\)/.exec(r.notes ?? '')?.[1] ?? 0) - (qkw ?? 0));
   const t = (r: LtpfRecord) => Math.abs(monthIndex(r.valid_from) - when);
+  if (otherSame.length) return otherSame.sort((a, b) => t(a) - t(b)).slice(0, 4);
   return (near.length ? near : other).sort((a, b) => k(a) - k(b) || t(a) - t(b)).slice(0, 4);
 }
 

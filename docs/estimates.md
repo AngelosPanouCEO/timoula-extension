@@ -12,7 +12,7 @@ with its source.
 | 2 | Greek list, same version, another period (γ) | Εκτίμηση | strict match on cc/power/fuel/gearbox |
 | 3 | German base price of the same version without 19% VAT (ε) | Εκτίμηση | ADAC Autokatalog, `ltpf/de-prices.json` |
 | 4 | Greek sister version (β) | Εκτίμηση | moved to the end when its power is > 15% away from the car's |
-| 5 | German price of the closest version of the same model (power ±25%, same fuel), closest power first; if none was on sale at the time, one sold up to 18 months before or after | Εκτίμηση (χαμηλή ακρίβεια) | e.g. a 325d when ADAC has only 320d/330d, or an Octavia RS Combi when ADAC lists only the Limousine |
+| 5 | German price of the same version sold up to 18 months before or after; else the closest version of the same model (power ±25%, same fuel, in period or up to 18 months away), price × (car kW / version kW)^0.45 | Εκτίμηση (χαμηλή ακρίβεια) | e.g. a 325d when ADAC has only 320d/330d. 0.45 = median price/power elasticity of 4.757 pairs of base versions in the table |
 | 6 | Median German price of new cars with similar power and fuel, around the first registration | Εκτίμηση (χαμηλή ακρίβεια) | same make (kW ±10%, ≥ 3 versions), else all makes (kW ±5%, ≥ 5) — `deMarketEstimate()` |
 
 Every fallback is a **new-car** price. The ΛΤΠΦ is never derived from the used listing price:
@@ -27,7 +27,11 @@ apart, compressed). Each page embeds the versions of the generation's first body
 saloon or hatchback); the other bodies (Avant, Touring, allroad, Combi, RS…) are loaded by ADAC's
 API under `/bff`, which robots.txt disallows, so they are not collected that way. The sitemap also
 lists single version pages (about 20.000, mostly tested cars), some of them for the other bodies;
-`adac_crawl.py details` reads the ones the generation pages lack. robots.txt allows the catalogue
+`adac_crawl.py details` reads the ones the generation pages lack. Version pages are numbered in
+sequence, the other bodies' versions between the first body's (BMW X5 G05: xDrive30d 291551,
+M50d 291552, xDrive40i 291553), and any version page can be opened by its number:
+`adac_crawl.py gaps` reads the numbers missing between known ones. About 44% of the versions are
+not on the generation pages (sample of 159 generations: 4.114 of 7.386). robots.txt allows the catalogue
 pages. **ADAC's terms of use for commercial reuse must be checked before the extension is
 published**; until then the data is for testing. Prices listed 7–12/2020 may include Germany's
 temporary 16% VAT.
